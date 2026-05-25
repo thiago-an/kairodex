@@ -4,79 +4,87 @@ const cors = require("cors");
 
 const axios = require("axios");
 
+const path = require("path");
+
 const app = express();
+
+const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 
-app.get("/api/mangas", async(req,res)=>{
+app.use(express.json());
 
-  try{
+/**
+ * FRONTEND
+ */
+
+app.use(express.static(path.join(__dirname, "../frontend")));
+
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/index.html"));
+});
+
+app.get("/login", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/pages/login.html"));
+});
+
+app.get("/dashboard", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/pages/dashboard.html"));
+});
+
+app.get("/manga", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/pages/manga.html"));
+});
+
+app.get("/chapter", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/pages/chapter.html"));
+});
+
+app.get("/library", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/pages/library.html"));
+});
+
+app.get("/admin", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/pages/admin.html"));
+});
+
+/**
+ * API MANGADEX
+ */
+
+/**
+ * LISTAR MANGÁS
+ */
+
+app.get("/api/mangas", async (req, res) => {
+
+  try {
 
     const response = await axios.get(
 
-      "https://api.mangadex.org/manga?limit=20&availableTranslatedLanguage[]=pt-br&order[followedCount]=desc"
+      "https://api.mangadex.org/manga?limit=20&order[followedCount]=desc"
 
     );
 
     res.json(response.data);
 
-  }catch(error){
+  } catch (error) {
 
     res.status(500).json({
-      error:error.message
+      error: error.message
     });
 
   }
 
 });
 
-app.get("/api/cover/:id", async(req,res)=>{
+/**
+ * DETALHES MANGÁ
+ */
 
-  try{
+app.get("/api/manga/:id", async (req, res) => {
 
-    const response = await axios.get(
-
-      `https://api.mangadex.org/cover/${req.params.id}`
-
-    );
-
-    res.json(response.data);
-
-  }catch(error){
-
-    res.status(500).json({
-      error:error.message
-    });
-
-  }
-
-});
-
-app.get("/api/chapters/:id", async(req,res)=>{
-
-  try{
-
-    const response = await axios.get(
-
-      `https://api.mangadex.org/chapter?manga=${req.params.id}&limit=20`
-
-    );
-
-    res.json(response.data);
-
-  }catch(error){
-
-    res.status(500).json({
-      error:error.message
-    });
-
-  }
-
-});
-
-app.get("/api/manga/:id", async(req,res)=>{
-
-  try{
+  try {
 
     const response = await axios.get(
 
@@ -86,24 +94,100 @@ app.get("/api/manga/:id", async(req,res)=>{
 
     res.json(response.data);
 
-  }catch(error){
+  } catch (error) {
 
     res.status(500).json({
-      error:error.message
+      error: error.message
     });
 
   }
 
 });
 
-app.get("/", (req,res)=>{
+/**
+ * CAPA
+ */
 
-  res.send("KairoDEX API ONLINE");
+app.get("/api/cover/:id", async (req, res) => {
+
+  try {
+
+    const response = await axios.get(
+
+      `https://api.mangadex.org/cover/${req.params.id}`
+
+    );
+
+    res.json(response.data);
+
+  } catch (error) {
+
+    res.status(500).json({
+      error: error.message
+    });
+
+  }
 
 });
 
-app.listen(3000, ()=>{
+/**
+ * CAPÍTULOS
+ */
 
-  console.log("Servidor rodando em http://localhost:3000");
+app.get("/api/chapters/:id", async (req, res) => {
+
+  try {
+
+    const response = await axios.get(
+
+      `https://api.mangadex.org/chapter?manga=${req.params.id}&limit=100`
+
+    );
+
+    res.json(response.data);
+
+  } catch (error) {
+
+    res.status(500).json({
+      error: error.message
+    });
+
+  }
+
+});
+
+/**
+ * LEITOR
+ */
+
+app.get("/api/chapter/:id", async (req, res) => {
+
+  try {
+
+    const response = await axios.get(
+
+      `https://api.mangadex.org/at-home/server/${req.params.id}`
+
+    );
+
+    res.json(response.data);
+
+  } catch (error) {
+
+    res.status(500).json({
+      error: error.message
+    });
+
+  }
+
+});
+
+/**
+ * START
+ */
+
+app.listen(PORT, () => {
+
+  console.log(`🔥 KairoDEX Server rodando na porta ${PORT}`);
 
 });

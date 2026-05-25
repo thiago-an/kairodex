@@ -12,7 +12,7 @@ async function loadChapters(){
 
     const response = await fetch(
 
-      `http://localhost:3000/api/chapters/${mangaId}`
+      `https://kairodex-api.onrender.com/api/chapters/${mangaId}`
 
     );
 

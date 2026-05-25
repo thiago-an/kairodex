@@ -28,7 +28,7 @@ onAuthStateChanged(auth, (user) => {
 
     setTimeout(() => {
 
-      window.location.href = "./login.html";
+      window.location.href = "../pages/login.html";
 
     }, 1000);
 
@@ -40,6 +40,6 @@ logoutBtn.addEventListener("click", async () => {
 
   await signOut(auth);
 
-  window.location.href = "../pages/login.html";
+  window.location.href = "/pages/login.html";
 
 });

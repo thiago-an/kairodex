@@ -21,7 +21,7 @@ onAuthStateChanged(auth, async(user)=>{
 
   if(!user){
 
-    window.location.href = "../pages/login.html";
+    window.location.href = "/pages/login.html";
 
     return;
 
@@ -50,7 +50,7 @@ onAuthStateChanged(auth, async(user)=>{
 
       libraryGrid.innerHTML += `
 
-        <a href="../pages/manga.html?id=${favorite.mangaId}" class="manga-card">
+        <a href="/pages/manga.html?id=${favorite.mangaId}" class="manga-card">
 
           <img src="${manga.cover}">
 

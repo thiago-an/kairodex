@@ -7,7 +7,7 @@ async function loadMangas(){
   try{
 
     const response = await fetch(
-      "http://localhost:3000/api/mangas"
+      "https://kairodex-api.onrender.com/api/mangas"
     );
 
     const result = await response.json();
@@ -37,7 +37,7 @@ async function loadMangas(){
         if(coverRel){
 
           const coverResponse = await fetch(
-            `http://localhost:3000/api/cover/${coverRel.id}`
+            `https://kairodex-api.onrender.com/api/cover/${coverRel.id}`
           );
 
           const coverData = await coverResponse.json();
