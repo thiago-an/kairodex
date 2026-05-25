@@ -60,17 +60,31 @@ app.get("/api/mangas", async (req, res) => {
   try {
     const search = req.query.search || "";
 
-    const response = await axios.get("https://api.mangadex.org/manga", {
-      params: {
-        limit: 20,
-        title: search || undefined,
-        "order[followedCount]": "desc",
-        "includes[]": ["cover_art"]
+    const params = new URLSearchParams();
+
+    params.append("limit", "20");
+    params.append("order[followedCount]", "desc");
+    params.append("includes[]", "cover_art");
+
+    if (search) {
+      params.append("title", search);
+    }
+
+    const response = await axios.get(
+      `https://api.mangadex.org/manga?${params.toString()}`,
+      {
+        timeout: 15000,
+        headers: {
+          "User-Agent": "KairoDEX/1.0"
+        }
       }
-    });
+    );
 
     res.json(response.data);
+
   } catch (error) {
+    console.log("Erro MangaDex:", error.message);
+
     res.status(500).json({
       error: error.message
     });
