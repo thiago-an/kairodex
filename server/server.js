@@ -131,25 +131,17 @@ app.get("/api/cover/:id", async (req, res) => {
  */
 
 app.get("/api/chapters/:id", async (req, res) => {
-
   try {
-
     const response = await axios.get(
-
-      `https://api.mangadex.org/chapter?manga=${req.params.id}&limit=100`
-
+      `https://api.mangadex.org/chapter?manga=${req.params.id}&limit=100&translatedLanguage[]=pt-br&translatedLanguage[]=en&order[chapter]=desc`
     );
 
     res.json(response.data);
-
   } catch (error) {
-
     res.status(500).json({
       error: error.message
     });
-
   }
-
 });
 
 /**
