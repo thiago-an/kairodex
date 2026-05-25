@@ -1,28 +1,66 @@
+const API_BASE = "https://kairodex-api.onrender.com";
+
 const params = new URLSearchParams(window.location.search);
 
 const mangaId = params.get("id");
 
 const chaptersDiv = document.getElementById("chapters");
 
-console.log("MANGA ID:", mangaId);
+async function loadChapters() {
 
-async function loadChapters(){
-
-  try{
+  try {
 
     const response = await fetch(
-
-      `https://kairodex-api.onrender.com/api/chapters/${mangaId}`
-
+      `${API_BASE}/api/chapters/${mangaId}`
     );
 
     const result = await response.json();
 
-    console.log(result);
+    chaptersDiv.innerHTML = "<p>Carregando capítulos...</p>";
+
+    const validChapters = [];
+
+    for (const chapter of result.data) {
+
+      try {
+
+        const chapterResponse = await fetch(
+          `${API_BASE}/api/chapter/${chapter.id}`
+        );
+
+        const chapterData = await chapterResponse.json();
+
+        if (
+          chapterData.chapter &&
+          chapterData.chapter.hash &&
+          chapterData.chapter.data &&
+          chapterData.chapter.data.length > 0
+        ) {
+
+          validChapters.push(chapter);
+
+        }
+
+      } catch (error) {
+
+        console.log("Capítulo inválido:", chapter.id);
+
+      }
+
+    }
 
     chaptersDiv.innerHTML = "";
 
-    result.data.forEach((chapter)=>{
+    if (validChapters.length === 0) {
+
+      chaptersDiv.innerHTML =
+        "<p>Nenhum capítulo disponível.</p>";
+
+      return;
+
+    }
+
+    validChapters.forEach((chapter) => {
 
       chaptersDiv.innerHTML += `
 
@@ -39,9 +77,12 @@ async function loadChapters(){
 
     });
 
-  }catch(error){
+  } catch (error) {
 
     console.log(error);
+
+    chaptersDiv.innerHTML =
+      "<p>Erro ao carregar capítulos.</p>";
 
   }
 

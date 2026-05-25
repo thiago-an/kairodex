@@ -9,18 +9,19 @@ async function loadChapter() {
   try {
     reader.innerHTML = "<p>Carregando capítulo...</p>";
 
-    if (!chapterId) {
-      reader.innerHTML = "<p>Capítulo não encontrado.</p>";
-      return;
-    }
-
     const response = await fetch(`${API_BASE}/api/chapter/${chapterId}`);
     const data = await response.json();
 
-    console.log("Dados do capítulo:", data);
+    console.log("Dados completos:", data);
 
-    if (!data.chapter || !data.chapter.data || data.chapter.data.length === 0) {
-      reader.innerHTML = "<p>Nenhuma página encontrada neste capítulo.</p>";
+    if (
+      !data.baseUrl ||
+      !data.chapter ||
+      !data.chapter.hash ||
+      !data.chapter.data ||
+      data.chapter.data.length === 0
+    ) {
+      reader.innerHTML = "<p>Este capítulo não possui páginas disponíveis.</p>";
       return;
     }
 
@@ -34,18 +35,17 @@ async function loadChapter() {
       const imageUrl = `${baseUrl}/data/${hash}/${page}`;
 
       reader.innerHTML += `
-        <img 
-          src="${imageUrl}" 
+        <img
+          src="${imageUrl}"
           class="manga-page-img"
-          loading="lazy"
-          alt="Página do capítulo"
+          alt="Página"
         >
       `;
     });
 
   } catch (error) {
-    console.error("Erro ao carregar capítulo:", error);
-    reader.innerHTML = "<p>Erro ao carregar o capítulo.</p>";
+    console.log(error);
+    reader.innerHTML = "<p>Erro ao carregar capítulo.</p>";
   }
 }
 

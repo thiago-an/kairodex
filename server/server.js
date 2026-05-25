@@ -57,25 +57,21 @@ app.get("/admin", (req, res) => {
  */
 
 app.get("/api/mangas", async (req, res) => {
-
   try {
+    const search = req.query.search;
 
-    const response = await axios.get(
+    const url = search
+      ? `https://api.mangadex.org/manga?limit=20&title=${encodeURIComponent(search)}&order[followedCount]=desc`
+      : "https://api.mangadex.org/manga?limit=20&order[followedCount]=desc";
 
-      "https://api.mangadex.org/manga?limit=20&order[followedCount]=desc"
-
-    );
+    const response = await axios.get(url);
 
     res.json(response.data);
-
   } catch (error) {
-
     res.status(500).json({
       error: error.message
     });
-
   }
-
 });
 
 /**

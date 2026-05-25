@@ -1,88 +1,66 @@
-console.log("MANGAS API CARREGOU");
+const API_BASE = "https://kairodex-api.onrender.com";
 
 const mangaGrid = document.getElementById("manga-grid");
+const searchInput = document.getElementById("search-input");
 
-async function loadMangas(){
+async function loadMangas(search = "") {
+  try {
+    mangaGrid.innerHTML = "<p>Carregando mangás...</p>";
 
-  try{
+    const url = search
+      ? `${API_BASE}/api/mangas?search=${encodeURIComponent(search)}`
+      : `${API_BASE}/api/mangas`;
 
-    const response = await fetch(
-      "https://kairodex-api.onrender.com/api/mangas"
-    );
-
+    const response = await fetch(url);
     const result = await response.json();
 
-    const mangas = result.data;
+    const mangas = result.data || [];
 
     mangaGrid.innerHTML = "";
 
-    for(const manga of mangas){
+    for (const manga of mangas) {
+      const mangaId = manga.id;
+      const title = Object.values(manga.attributes.title)[0] || "Sem título";
 
-      try{
+      let coverUrl = "https://placehold.co/300x450?text=Sem+Capa";
 
-        const mangaId = manga.id;
+      const coverRel = manga.relationships.find(
+        rel => rel.type === "cover_art"
+      );
 
-        const titleObj = manga.attributes.title;
+      if (coverRel) {
+        const coverResponse = await fetch(`${API_BASE}/api/cover/${coverRel.id}`);
+        const coverData = await coverResponse.json();
 
-        const title =
-          Object.values(titleObj)[0] || "Sem título";
-
-        let coverUrl =
-          "https://placehold.co/300x450?text=Sem+Capa";
-
-        const coverRel = manga.relationships.find(
-          rel => rel.type === "cover_art"
-        );
-
-        if(coverRel){
-
-          const coverResponse = await fetch(
-            `https://kairodex-api.onrender.com/api/cover/${coverRel.id}`
-          );
-
-          const coverData = await coverResponse.json();
-
-          if(
-            coverData.data &&
-            coverData.data.attributes
-          ){
-
-            const fileName =
-              coverData.data.attributes.fileName;
-
-            coverUrl =
-              `https://uploads.mangadex.org/covers/${mangaId}/${fileName}.256.jpg`;
-
-          }
-
+        if (coverData.data?.attributes?.fileName) {
+          const fileName = coverData.data.attributes.fileName;
+          coverUrl = `https://uploads.mangadex.org/covers/${mangaId}/${fileName}.256.jpg`;
         }
-
-        mangaGrid.innerHTML += `
-
-          <a href="./manga.html?id=${mangaId}" class="manga-card">
-
-            <img src="${coverUrl}">
-
-            <h3>${title}</h3>
-
-          </a>
-
-        `;
-
-      }catch(error){
-
-        console.log("Erro no mangá:", error);
-
       }
 
+      mangaGrid.innerHTML += `
+        <a href="./manga.html?id=${mangaId}" class="manga-card">
+          <img src="${coverUrl}">
+          <h3>${title}</h3>
+        </a>
+      `;
     }
 
-  }catch(error){
+    if (mangas.length === 0) {
+      mangaGrid.innerHTML = "<p>Nenhum mangá encontrado.</p>";
+    }
 
+  } catch (error) {
     console.log("Erro API:", error);
-
+    mangaGrid.innerHTML = "<p>Erro ao carregar mangás.</p>";
   }
+}
 
+if (searchInput) {
+  searchInput.addEventListener("input", () => {
+    const value = searchInput.value.trim();
+    loadMangas(value);
+  });
 }
 
 loadMangas();
