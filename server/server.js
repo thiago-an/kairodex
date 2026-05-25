@@ -70,17 +70,18 @@ app.get("/api/mangas", async (req, res) => {
       params.append("title", search);
     }
 
-    const response = await axios.get(
-      `https://api.mangadex.org/manga?${params.toString()}`,
-      {
-        timeout: 15000,
-        headers: {
-          "User-Agent": "KairoDEX/1.0"
-        }
-      }
-    );
+    const url = `https://api.mangadex.org/manga?${params.toString()}`;
 
-    res.json(response.data);
+    const response = await fetch(url, {
+      headers: {
+        "Accept": "application/json",
+        "User-Agent": "KairoDEX/1.0"
+      }
+    });
+
+    const data = await response.json();
+
+    res.json(data);
 
   } catch (error) {
     console.log("Erro MangaDex:", error.message);
