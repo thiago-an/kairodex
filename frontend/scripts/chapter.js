@@ -1,39 +1,52 @@
-const params = new URLSearchParams(window.location.search);
+const API_BASE = "https://kairodex-api.onrender.com";
 
+const params = new URLSearchParams(window.location.search);
 const chapterId = params.get("id");
 
 const reader = document.getElementById("reader");
 
-async function loadChapter(){
+async function loadChapter() {
+  try {
+    reader.innerHTML = "<p>Carregando capítulo...</p>";
 
-  const response = await fetch(
+    if (!chapterId) {
+      reader.innerHTML = "<p>Capítulo não encontrado.</p>";
+      return;
+    }
 
-    `https://api.mangadex.org/at-home/server/${chapterId}`
+    const response = await fetch(`${API_BASE}/api/chapter/${chapterId}`);
+    const data = await response.json();
 
-  );
+    console.log("Dados do capítulo:", data);
 
-  const data = await response.json();
+    if (!data.chapter || !data.chapter.data || data.chapter.data.length === 0) {
+      reader.innerHTML = "<p>Nenhuma página encontrada neste capítulo.</p>";
+      return;
+    }
 
-  const baseUrl = data.baseUrl;
+    const baseUrl = data.baseUrl;
+    const hash = data.chapter.hash;
+    const pages = data.chapter.data;
 
-  const chapter = data.chapter;
+    reader.innerHTML = "";
 
-  chapter.data.forEach((page)=>{
+    pages.forEach((page) => {
+      const imageUrl = `${baseUrl}/data/${hash}/${page}`;
 
-    const imageUrl = `
+      reader.innerHTML += `
+        <img 
+          src="${imageUrl}" 
+          class="manga-page-img"
+          loading="lazy"
+          alt="Página do capítulo"
+        >
+      `;
+    });
 
-      ${baseUrl}/data/${chapter.hash}/${page}
-
-    `;
-
-    reader.innerHTML += `
-
-      <img src="${imageUrl}" class="manga-page-img">
-
-    `;
-
-  });
-
+  } catch (error) {
+    console.error("Erro ao carregar capítulo:", error);
+    reader.innerHTML = "<p>Erro ao carregar o capítulo.</p>";
+  }
 }
 
 loadChapter();
