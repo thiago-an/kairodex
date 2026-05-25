@@ -70,15 +70,11 @@ app.get("/api/mangas", async (req, res) => {
       params.append("title", search);
     }
 
-    const url = `https://api.mangadex.org/manga?${params.toString()}`;
+    const mangadexUrl = `https://api.mangadex.org/manga?${params.toString()}`;
 
-    const response = await fetch(url, {
-      headers: {
-        "Accept": "application/json",
-        "User-Agent": "KairoDEX/1.0"
-      }
-    });
+    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(mangadexUrl)}`;
 
+    const response = await fetch(proxyUrl);
     const data = await response.json();
 
     res.json(data);
