@@ -11,18 +11,29 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 async function fetchMangaDex(path) {
-  const mangadexUrl = `https://api.mangadex.org${path}`;
+  const url = `https://api.mangadex.org${path}`;
 
-  const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(mangadexUrl)}`;
+  const proxies = [
+    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`
+  ];
 
-  const response = await fetch(proxyUrl);
-  const proxyData = await response.json();
+  for (const proxyUrl of proxies) {
+    try {
+      const response = await fetch(proxyUrl);
+      const text = await response.text();
 
-  if (!proxyData.contents) {
-    throw new Error("Proxy não retornou conteúdo.");
+      if (text.trim().startsWith("<")) {
+        continue;
+      }
+
+      return JSON.parse(text);
+    } catch (error) {
+      console.log("Proxy falhou:", proxyUrl, error.message);
+    }
   }
 
-  return JSON.parse(proxyData.contents);
+  throw new Error("Todos os proxies falharam.");
 }
 
 app.use(cors());
@@ -78,6 +89,7 @@ app.get("/api/mangas", async (req, res) => {
     const params = new URLSearchParams();
     params.append("limit", "20");
     params.append("order[followedCount]", "desc");
+    params.append("includes[]", "cover_art");
 
     if (search) {
       params.append("title", search);
