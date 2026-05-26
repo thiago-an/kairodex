@@ -11,7 +11,6 @@ export default async function handler(req, res) {
     const params = new URLSearchParams();
     params.append("manga", id);
     params.append("limit", "100");
-    params.append("includes[]", "scanlation_group");
     params.append("order[chapter]", "desc");
 
     const response = await fetch(
