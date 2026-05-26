@@ -1,5 +1,4 @@
-import app from "./firebase.js";
-import { db } from "./firebase.js";
+import app, { db } from "./firebase.js";
 
 import {
   getAuth,
@@ -8,14 +7,13 @@ import {
 
 import {
   collection,
-  getDocs,
-  doc,
-  getDoc
+  getDocs
 } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 const auth = getAuth(app);
 
-const libraryGrid = document.getElementById("library-grid");
+const favoritesGrid =
+  document.getElementById("favorites-grid");
 
 onAuthStateChanged(auth, async(user)=>{
 
@@ -27,40 +25,37 @@ onAuthStateChanged(auth, async(user)=>{
 
   }
 
-  const favoritesRef = collection(
-    db,
-    "users",
-    user.uid,
-    "favorites"
+  const snapshot = await getDocs(
+
+    collection(
+      db,
+      "users",
+      user.uid,
+      "favorites"
+    )
+
   );
 
-  const favoritesSnap = await getDocs(favoritesRef);
+  favoritesGrid.innerHTML = "";
 
-  favoritesSnap.forEach(async(favoriteDoc)=>{
+  snapshot.forEach((doc)=>{
 
-    const favorite = favoriteDoc.data();
+    const manga = doc.data();
 
-    const mangaRef = doc(db,"mangas",favorite.mangaId);
+    favoritesGrid.innerHTML += `
 
-    const mangaSnap = await getDoc(mangaRef);
+      <a
+        href="/pages/manga.html?id=${manga.mangaId}"
+        class="manga-card"
+      >
 
-    if(mangaSnap.exists()){
+        <img src="${manga.cover}">
 
-      const manga = mangaSnap.data();
+        <h3>${manga.title}</h3>
 
-      libraryGrid.innerHTML += `
+      </a>
 
-        <a href="/pages/manga.html?id=${favorite.mangaId}" class="manga-card">
-
-          <img src="${manga.cover}">
-
-          <h3>${manga.title}</h3>
-
-        </a>
-
-      `;
-
-    }
+    `;
 
   });
 

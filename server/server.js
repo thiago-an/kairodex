@@ -93,25 +93,17 @@ app.get("/api/mangas", async (req, res) => {
  */
 
 app.get("/api/manga/:id", async (req, res) => {
-
   try {
+    const mangadexUrl = `https://api.mangadex.org/manga/${req.params.id}`;
+    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(mangadexUrl)}`;
 
-    const response = await axios.get(
+    const response = await fetch(proxyUrl);
+    const data = await response.json();
 
-      `https://api.mangadex.org/manga/${req.params.id}`
-
-    );
-
-    res.json(response.data);
-
+    res.json(data);
   } catch (error) {
-
-    res.status(500).json({
-      error: error.message
-    });
-
+    res.status(500).json({ error: error.message });
   }
-
 });
 
 /**
@@ -119,25 +111,17 @@ app.get("/api/manga/:id", async (req, res) => {
  */
 
 app.get("/api/cover/:id", async (req, res) => {
-
   try {
+    const mangadexUrl = `https://api.mangadex.org/cover/${req.params.id}`;
+    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(mangadexUrl)}`;
 
-    const response = await axios.get(
+    const response = await fetch(proxyUrl);
+    const data = await response.json();
 
-      `https://api.mangadex.org/cover/${req.params.id}`
-
-    );
-
-    res.json(response.data);
-
+    res.json(data);
   } catch (error) {
-
-    res.status(500).json({
-      error: error.message
-    });
-
+    res.status(500).json({ error: error.message });
   }
-
 });
 
 /**
@@ -146,15 +130,17 @@ app.get("/api/cover/:id", async (req, res) => {
 
 app.get("/api/chapters/:id", async (req, res) => {
   try {
-    const response = await axios.get(
-      `https://api.mangadex.org/chapter?manga=${req.params.id}&limit=100&translatedLanguage[]=pt-br&translatedLanguage[]=en&order[chapter]=desc`
-    );
+    const mangadexUrl =
+      `https://api.mangadex.org/chapter?manga=${req.params.id}&limit=100&translatedLanguage[]=pt-br&translatedLanguage[]=en&order[chapter]=desc`;
 
-    res.json(response.data);
+    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(mangadexUrl)}`;
+
+    const response = await fetch(proxyUrl);
+    const data = await response.json();
+
+    res.json(data);
   } catch (error) {
-    res.status(500).json({
-      error: error.message
-    });
+    res.status(500).json({ error: error.message });
   }
 });
 
