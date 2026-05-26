@@ -11,7 +11,7 @@ async function loadMangas(search = "") {
       ? `${API_BASE}/api/mangas?search=${encodeURIComponent(search)}`
       : `${API_BASE}/api/mangas`;
 
-    const response = await fetch(`${API_BASE}/api/mangas`);
+    const response = await fetch(url);
     const result = await response.json();
 
     if (result.error) {
@@ -37,6 +37,9 @@ async function loadMangas(search = "") {
       const coverRel = manga.relationships?.find(
         rel => rel.type === "cover_art"
       );
+
+console.log("Cover ID:", coverRel.id);
+console.log("Cover URL:", `${API_BASE}/api/cover?id=${coverRel.id}`);
 
       if (coverRel) {
         const coverResponse = await fetch(`${API_BASE}/api/cover?id=${coverRel.id}`);
