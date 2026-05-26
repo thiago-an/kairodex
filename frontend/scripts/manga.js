@@ -14,7 +14,7 @@ async function loadManga(){
 
   const response = await fetch(
 
-    `https://kairodex-api.onrender.com/api/manga/${mangaId}`
+    `https://kairodex.vercel.app/api/mangas/api/manga?id=ID`
 
   );
 
@@ -58,7 +58,7 @@ const mangaTitle =
 
     const coverResponse = await fetch(
 
-      `https://kairodex-api.onrender.com/api/manga/${coverRel.id}`
+      `https://kairodex.vercel.app/api/mangas/api/cover?id=${coverRel.id}`
 
     );
 

@@ -1,4 +1,4 @@
-const API_BASE = "https://kairodex-api.onrender.com";
+const API_BASE = "https://kairodex.vercel.app";
 
 const mangaGrid = document.getElementById("manga-grid");
 const searchInput = document.getElementById("search-input");
