@@ -21,12 +21,12 @@ async function loadMangas(search = "") {
 
     const mangas = Array.isArray(result.data) ? result.data : [];
 
-    mangaGrid.innerHTML = "";
-
     if (mangas.length === 0) {
       mangaGrid.innerHTML = "<p>Nenhum mangá encontrado.</p>";
       return;
     }
+
+    mangaGrid.innerHTML = "";
 
     for (const manga of mangas) {
       const mangaId = manga.id;
@@ -35,20 +35,13 @@ async function loadMangas(search = "") {
       let coverUrl = "https://placehold.co/300x450?text=Sem+Capa";
 
       const coverRel = manga.relationships?.find(
-        rel => rel.type === "cover_art"
+        (rel) => rel.type === "cover_art"
       );
 
-console.log("Cover ID:", coverRel.id);
-console.log("Cover URL:", `${API_BASE}/api/cover?id=${coverRel.id}`);
+      if (coverRel?.attributes?.fileName) {
+        const fileName = coverRel.attributes.fileName;
 
-      if (coverRel) {
-        const coverResponse = await fetch(`${API_BASE}/api/cover?id=${coverRel.id}`);
-        const coverData = await coverResponse.json();
-
-        if (coverData.data?.attributes?.fileName) {
-          const fileName = coverData.data.attributes.fileName;
-          coverUrl = `https://uploads.mangadex.org/covers/${mangaId}/${fileName}.256.jpg`;
-        }
+        coverUrl = `https://uploads.mangadex.org/covers/${mangaId}/${fileName}.256.jpg`;
       }
 
       mangaGrid.innerHTML += `
@@ -58,7 +51,6 @@ console.log("Cover URL:", `${API_BASE}/api/cover?id=${coverRel.id}`);
         </a>
       `;
     }
-
   } catch (error) {
     console.log("Erro API:", error);
     mangaGrid.innerHTML = "<p>Erro ao carregar mangás.</p>";
