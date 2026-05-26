@@ -12,11 +12,7 @@ const genresDiv = document.getElementById("manga-genres");
 
 async function loadManga(){
 
-  const response = await fetch(
-
-    `https://kairodex.vercel.app/api/mangas/api/manga?id=ID`
-
-  );
+const response = await fetch(`${API_BASE}/api/manga?id=${mangaId}`);
 
   const data = await response.json();
 

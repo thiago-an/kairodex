@@ -1,4 +1,4 @@
-const API_BASE = "https://kairodex.vercel.app/api/mangas";
+const API_BASE = "https://kairodex.vercel.app";
 
 const params = new URLSearchParams(window.location.search);
 
@@ -10,9 +10,7 @@ async function loadChapters() {
 
   try {
 
-    const response = await fetch(
-      `${API_BASE}/api/chapters?id=${mangaId}`
-    );
+const response = await fetch(`${API_BASE}/api/chapters?id=${mangaId}`);
 
     const result = await response.json();
 

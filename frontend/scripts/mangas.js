@@ -11,7 +11,7 @@ async function loadMangas(search = "") {
       ? `${API_BASE}/api/mangas?search=${encodeURIComponent(search)}`
       : `${API_BASE}/api/mangas`;
 
-    const response = await fetch(url);
+    const response = await fetch(`${API_BASE}/api/mangas`);
     const result = await response.json();
 
     if (result.error) {
@@ -39,7 +39,7 @@ async function loadMangas(search = "") {
       );
 
       if (coverRel) {
-        const coverResponse = await fetch(`${API_BASE}/api/cover/${coverRel.id}`);
+        const coverResponse = await fetch(`${API_BASE}/api/cover?id=${coverRel.id}`);
         const coverData = await coverResponse.json();
 
         if (coverData.data?.attributes?.fileName) {
