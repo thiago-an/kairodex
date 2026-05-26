@@ -23,7 +23,7 @@ const response = await fetch(`${API_BASE}/api/chapters?id=${mangaId}`);
       try {
 
         const chapterResponse = await fetch(
-          `${API_BASE}/api/chapter/${chapter.id}`
+          `${API_BASE}/api/chapter?id=${chapter.id}`
         );
 
         const chapterData = await chapterResponse.json();
