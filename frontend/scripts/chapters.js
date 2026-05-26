@@ -52,7 +52,11 @@ const response = await fetch(`${API_BASE}/api/chapters?id=${mangaId}`);
     if (validChapters.length === 0) {
 
       chaptersDiv.innerHTML =
-        "<p>Nenhum capítulo disponível.</p>";
+         <div class="empty-message">
+      <h3>Nenhum capítulo em PT-BR disponível</h3>
+      <p>Este mangá ainda não possui capítulos em português brasileiro no MangaDex.</p>
+    </div>
+        ;
 
       return;
 

@@ -384,3 +384,16 @@ main{
   }
 
 }
+
+.empty-message {
+  background: #181818;
+  padding: 25px;
+  border-radius: 15px;
+  margin-top: 20px;
+  color: #ccc;
+}
+
+.empty-message h3 {
+  color: white;
+  margin-bottom: 10px;
+}
