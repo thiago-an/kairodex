@@ -10,6 +10,19 @@ const app = express();
 
 const PORT = process.env.PORT || 3000;
 
+const https = require("https");
+
+const axiosClient = axios.create({
+  timeout: 20000,
+  httpsAgent: new https.Agent({
+    keepAlive: false
+  }),
+  headers: {
+    "Accept": "application/json",
+    "User-Agent": "KairoDEX/1.0"
+  }
+});
+
 async function fetchMangaDex(path) {
   const url = `https://api.mangadex.org${path}`;
 
@@ -86,19 +99,18 @@ app.get("/api/mangas", async (req, res) => {
   try {
     const search = req.query.search || "";
 
-    const params = new URLSearchParams();
-    params.append("limit", "20");
-    params.append("order[followedCount]", "desc");
-    params.append("includes[]", "cover_art");
+    const response = await axiosClient.get("https://api.mangadex.org/manga", {
+      params: {
+        limit: 20,
+        title: search || undefined,
+        "order[followedCount]": "desc",
+        "includes[]": ["cover_art"]
+      }
+    });
 
-    if (search) {
-      params.append("title", search);
-    }
-
-    const data = await fetchMangaDex(`/manga?${params.toString()}`);
-
-    res.json(data);
+    res.json(response.data);
   } catch (error) {
+    console.log("Erro /api/mangas:", error.message);
     res.status(500).json({
       error: error.message
     });
