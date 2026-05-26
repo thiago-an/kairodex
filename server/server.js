@@ -99,18 +99,35 @@ app.get("/api/mangas", async (req, res) => {
   try {
     const search = req.query.search || "";
 
-    const response = await axiosClient.get("https://api.mangadex.org/manga", {
-      params: {
-        limit: 20,
-        title: search || undefined,
-        "order[followedCount]": "desc",
-        "includes[]": ["cover_art"]
-      }
-    });
+    const params = new URLSearchParams();
+    params.append("limit", "20");
+    params.append("order[followedCount]", "desc");
+    params.append("includes[]", "cover_art");
 
-    res.json(response.data);
+    if (search) params.append("title", search);
+
+    const url = `https://api.mangadex.org/manga?${params.toString()}`;
+
+    try {
+      const direct = await axiosClient.get(url);
+      return res.json(direct.data);
+    } catch (directError) {
+      console.log("Direto falhou, tentando proxy:", directError.message);
+    }
+
+    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+    const proxyResponse = await fetch(proxyUrl);
+    const text = await proxyResponse.text();
+
+    if (text.trim().startsWith("<")) {
+      throw new Error("Proxy retornou HTML");
+    }
+
+    return res.json(JSON.parse(text));
+
   } catch (error) {
     console.log("Erro /api/mangas:", error.message);
+
     res.status(500).json({
       error: error.message
     });
