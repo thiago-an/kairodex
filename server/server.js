@@ -10,6 +10,21 @@ const app = express();
 
 const PORT = process.env.PORT || 3000;
 
+async function fetchMangaDex(path) {
+  const mangadexUrl = `https://api.mangadex.org${path}`;
+
+  const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(mangadexUrl)}`;
+
+  const response = await fetch(proxyUrl);
+  const proxyData = await response.json();
+
+  if (!proxyData.contents) {
+    throw new Error("Proxy não retornou conteúdo.");
+  }
+
+  return JSON.parse(proxyData.contents);
+}
+
 app.use(cors());
 
 app.use(express.json());
@@ -61,27 +76,17 @@ app.get("/api/mangas", async (req, res) => {
     const search = req.query.search || "";
 
     const params = new URLSearchParams();
-
     params.append("limit", "20");
     params.append("order[followedCount]", "desc");
-    params.append("includes[]", "cover_art");
 
     if (search) {
       params.append("title", search);
     }
 
-    const mangadexUrl = `https://api.mangadex.org/manga?${params.toString()}`;
-
-    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(mangadexUrl)}`;
-
-    const response = await fetch(proxyUrl);
-    const data = await response.json();
+    const data = await fetchMangaDex(`/manga?${params.toString()}`);
 
     res.json(data);
-
   } catch (error) {
-    console.log("Erro MangaDex:", error.message);
-
     res.status(500).json({
       error: error.message
     });
@@ -111,39 +116,14 @@ app.get("/api/manga/:id", async (req, res) => {
  */
 
 app.get("/api/cover/:id", async (req, res) => {
-
   try {
-
-    const mangadexUrl =
-      `https://api.mangadex.org/cover/${req.params.id}`;
-
-    const proxyUrl =
-      `https://api.allorigins.win/raw?url=${encodeURIComponent(mangadexUrl)}`;
-
-    const response = await fetch(proxyUrl, {
-      headers: {
-        "User-Agent": "KairoDEX/1.0"
-      }
-    });
-
-    const text = await response.text();
-
-    console.log(text);
-
-    const data = JSON.parse(text);
-
+    const data = await fetchMangaDex(`/cover/${req.params.id}`);
     res.json(data);
-
   } catch (error) {
-
-    console.log(error);
-
     res.status(500).json({
       error: error.message
     });
-
   }
-
 });
 
 /**
