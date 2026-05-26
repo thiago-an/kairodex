@@ -446,3 +446,53 @@ main{
   padding: 12px;
   font-size: 15px;
 }
+
+.manga-detail-page {
+  padding: 30px;
+}
+
+.manga-header {
+  display: flex;
+  gap: 30px;
+  background: #181818;
+  padding: 25px;
+  border-radius: 20px;
+  flex-wrap: wrap;
+}
+
+#manga-cover {
+  width: 260px;
+  max-width: 100%;
+  border-radius: 15px;
+  object-fit: cover;
+}
+
+.manga-info {
+  flex: 1;
+  min-width: 280px;
+}
+
+#manga-title {
+  font-size: 36px;
+  margin-bottom: 15px;
+}
+
+#manga-description {
+  color: #ccc;
+  line-height: 1.7;
+  margin-bottom: 20px;
+}
+
+.chapters-section {
+  margin-top: 30px;
+}
+
+@media (max-width: 768px) {
+  .manga-header {
+    flex-direction: column;
+  }
+
+  #manga-title {
+    font-size: 28px;
+  }
+}

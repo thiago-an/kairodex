@@ -4,39 +4,45 @@
 <head>
   <meta charset="UTF-8">
   <title>Mangá - KairoDEX</title>
-
   <link rel="stylesheet" href="/styles/style.css">
 </head>
 
 <body>
 
-  <div class="manga-page">
+  <main class="manga-detail-page">
 
-    <img id="manga-cover">
+    <section class="manga-header">
 
-    <div class="manga-info">
+      <img id="manga-cover" alt="Capa do mangá">
 
-      <h1 id="manga-title"></h1>
+      <div class="manga-info">
 
-      <p id="manga-description"></p>
+        <h1 id="manga-title"></h1>
 
-      <button id="favorite-btn"> ❤️ Favoritar</button>
+        <p id="manga-description"></p>
 
-      <div id="manga-genres"></div>
+        <button id="favorite-btn">❤️ Favoritar</button>
+
+        <div id="manga-genres"></div>
+
+      </div>
+
+    </section>
+
+    <section class="chapters-section">
 
       <h2>Capítulos</h2>
 
-<div id="chapters"></div>
+      <div id="chapters"></div>
 
-    </div>
+    </section>
 
-  </div>
+  </main>
 
   <script type="module" src="/scripts/manga.js"></script>
-
   <script type="module" src="/scripts/chapters.js"></script>
-  
   <script type="module" src="/scripts/favorites.js"></script>
+
 </body>
 
 </html>
