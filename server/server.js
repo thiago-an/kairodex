@@ -111,17 +111,39 @@ app.get("/api/manga/:id", async (req, res) => {
  */
 
 app.get("/api/cover/:id", async (req, res) => {
-  try {
-    const mangadexUrl = `https://api.mangadex.org/cover/${req.params.id}`;
-    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(mangadexUrl)}`;
 
-    const response = await fetch(proxyUrl);
-    const data = await response.json();
+  try {
+
+    const mangadexUrl =
+      `https://api.mangadex.org/cover/${req.params.id}`;
+
+    const proxyUrl =
+      `https://api.allorigins.win/raw?url=${encodeURIComponent(mangadexUrl)}`;
+
+    const response = await fetch(proxyUrl, {
+      headers: {
+        "User-Agent": "KairoDEX/1.0"
+      }
+    });
+
+    const text = await response.text();
+
+    console.log(text);
+
+    const data = JSON.parse(text);
 
     res.json(data);
+
   } catch (error) {
-    res.status(500).json({ error: error.message });
+
+    console.log(error);
+
+    res.status(500).json({
+      error: error.message
+    });
+
   }
+
 });
 
 /**

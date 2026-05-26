@@ -14,8 +14,6 @@ async function loadMangas(search = "") {
     const response = await fetch(url);
     const result = await response.json();
 
-    console.log("Resposta da API:", result);
-
     if (result.error) {
       mangaGrid.innerHTML = `<p>Erro da API: ${result.error}</p>`;
       return;
@@ -40,9 +38,14 @@ async function loadMangas(search = "") {
         rel => rel.type === "cover_art"
       );
 
-      if (coverRel?.attributes?.fileName) {
-        const fileName = coverRel.attributes.fileName;
-        coverUrl = `https://uploads.mangadex.org/covers/${mangaId}/${fileName}.256.jpg`;
+      if (coverRel) {
+        const coverResponse = await fetch(`${API_BASE}/api/cover/${coverRel.id}`);
+        const coverData = await coverResponse.json();
+
+        if (coverData.data?.attributes?.fileName) {
+          const fileName = coverData.data.attributes.fileName;
+          coverUrl = `https://uploads.mangadex.org/covers/${mangaId}/${fileName}.256.jpg`;
+        }
       }
 
       mangaGrid.innerHTML += `
