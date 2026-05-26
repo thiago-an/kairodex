@@ -1,11 +1,10 @@
 export default async function handler(req, res) {
-    res.setHeader("Access-Control-Allow-Origin", "*");
-res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
-res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-if (req.method === "OPTIONS") {
-  return res.status(200).end();
-}
+  if (req.method === "OPTIONS") return res.status(200).end();
+
   try {
     const search = req.query.search || "";
 
@@ -14,18 +13,11 @@ if (req.method === "OPTIONS") {
     params.append("order[followedCount]", "desc");
     params.append("includes[]", "cover_art");
 
-    if (search) {
-      params.append("title", search);
-    }
+    if (search) params.append("title", search);
 
-    const url = `https://api.mangadex.org/manga?${params.toString()}`;
-
-    const response = await fetch(url, {
-      headers: {
-        Accept: "application/json",
-        "User-Agent": "KairoDEX/1.0"
-      }
-    });
+    const response = await fetch(
+      `https://api.mangadex.org/manga?${params.toString()}`
+    );
 
     const data = await response.json();
 
