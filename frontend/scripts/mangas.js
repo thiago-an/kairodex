@@ -41,7 +41,7 @@ async function loadMangas(search = "") {
       if (coverRel?.attributes?.fileName) {
         const fileName = coverRel.attributes.fileName;
 
-        coverUrl = `https://uploads.mangadex.org/covers/${mangaId}/${fileName}.256.jpg`;
+        coverUrl = `https://uploads.mangadex.org/covers/${mangaId}/${fileName}`;
       }
 
       mangaGrid.innerHTML += `
