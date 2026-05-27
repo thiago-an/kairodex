@@ -1,3 +1,5 @@
+const API_BASE = "https://kairodex.vercel.app";
+
 const params = new URLSearchParams(window.location.search);
 
 const mangaId = params.get("id");
@@ -10,59 +12,57 @@ const description = document.getElementById("manga-description");
 
 const genresDiv = document.getElementById("manga-genres");
 
-async function loadManga(){
+async function loadManga() {
 
-const response = await fetch(`${API_BASE}/api/manga?id=${mangaId}`);
+  try {
 
-  const data = await response.json();
-
-  const manga = data.data;
-
-const titleObj = manga.attributes.title;
-
-const mangaTitle =
-  Object.values(titleObj)[0] || "Sem título";
-
-  title.innerText = mangaTitle;
-
-  description.innerText =
-    manga.attributes.description.en
-    || manga.attributes.description["pt-br"]
-    || "Sem descrição";
-
-  manga.attributes.tags.forEach((tag)=>{
-
-    genresDiv.innerHTML += `
-
-      <span class="genre">
-
-        ${tag.attributes.name.en}
-
-      </span>
-
-    `;
-
-  });
-
-  const coverRel = manga.relationships.find(
-
-    rel => rel.type === "cover_art"
-
-  );
-
-  if(coverRel){
-
-    const coverResponse = await fetch(
-
-      `https://kairodex.vercel.app/api/mangas/api/cover?id=${coverRel.id}`
-
+    const response = await fetch(
+      `${API_BASE}/api/manga?id=${mangaId}`
     );
 
-    const coverData = await coverResponse.json();
+    const data = await response.json();
 
-    const fileName = coverData.data.attributes.fileName;
+    const manga = data.data;
 
-    cover.src = `https://uploads.mangadex.org/covers/${mangaId}/${fileName}.512.jpg`;
+    const titleObj = manga.attributes.title;
+
+    const mangaTitle =
+      Object.values(titleObj)[0] || "Sem título";
+
+    title.innerText = mangaTitle;
+
+    description.innerText =
+      manga.attributes.description["pt-br"]
+      || manga.attributes.description.en
+      || "Sem descrição";
+
+    manga.attributes.tags.forEach((tag) => {
+
+      genresDiv.innerHTML += `
+        <span class="genre">
+          ${tag.attributes.name.en}
+        </span>
+      `;
+
+    });
+
+    const coverRel = manga.relationships?.find(
+      rel => rel.type === "cover_art"
+    );
+
+    if (coverRel?.attributes?.fileName) {
+
+      const fileName =
+        coverRel.attributes.fileName;
+
+      cover.src =
+        `${API_BASE}/api/image?mangaId=${mangaId}&fileName=${encodeURIComponent(fileName)}`;
+
+    }
+
+  } catch (error) {
+
+    console.log(error);
 
   }
 

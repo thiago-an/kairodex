@@ -9,7 +9,7 @@ async function loadChapter() {
   try {
     reader.innerHTML = "<p>Carregando capítulo...</p>";
 
- const response = await fetch(`${API_BASE}/api/chapter?id=${chapterId}`);
+    const response = await fetch(`${API_BASE}/api/chapter?id=${chapterId}`);
     const data = await response.json();
 
     console.log("Dados completos:", data);
@@ -31,14 +31,15 @@ async function loadChapter() {
 
     reader.innerHTML = "";
 
-    pages.forEach((page) => {
+    pages.forEach((page, index) => {
       const imageUrl = `${baseUrl}/data/${hash}/${page}`;
 
       reader.innerHTML += `
         <img
           src="${imageUrl}"
-          class="manga-page-img"
-          alt="Página"
+          class="reader-image"
+          alt="Página ${index + 1}"
+          loading="lazy"
         >
       `;
     });

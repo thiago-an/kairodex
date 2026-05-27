@@ -496,3 +496,32 @@ main{
     font-size: 28px;
   }
 }
+
+.reader-page {
+  padding: 20px;
+}
+
+.reader-header {
+  margin-bottom: 20px;
+}
+
+.back-btn {
+  background: #ff004c;
+  color: white;
+  padding: 10px 16px;
+  border-radius: 10px;
+  text-decoration: none;
+}
+
+#reader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.reader-image {
+  width: 100%;
+  max-width: 900px;
+  border-radius: 10px;
+}

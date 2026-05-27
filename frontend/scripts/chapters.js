@@ -10,11 +10,14 @@ async function loadChapters() {
 
   try {
 
-const response = await fetch(`${API_BASE}/api/chapters?id=${mangaId}`);
+    chaptersDiv.innerHTML =
+      "<p>Carregando capítulos...</p>";
+
+    const response = await fetch(
+      `${API_BASE}/api/chapters?id=${mangaId}`
+    );
 
     const result = await response.json();
-
-    chaptersDiv.innerHTML = "<p>Carregando capítulos...</p>";
 
     const validChapters = [];
 
@@ -26,7 +29,8 @@ const response = await fetch(`${API_BASE}/api/chapters?id=${mangaId}`);
           `${API_BASE}/api/chapter?id=${chapter.id}`
         );
 
-        const chapterData = await chapterResponse.json();
+        const chapterData =
+          await chapterResponse.json();
 
         if (
           chapterData.chapter &&
@@ -41,7 +45,10 @@ const response = await fetch(`${API_BASE}/api/chapters?id=${mangaId}`);
 
       } catch (error) {
 
-        console.log("Capítulo inválido:", chapter.id);
+        console.log(
+          "Capítulo inválido:",
+          chapter.id
+        );
 
       }
 
@@ -51,12 +58,16 @@ const response = await fetch(`${API_BASE}/api/chapters?id=${mangaId}`);
 
     if (validChapters.length === 0) {
 
-      chaptersDiv.innerHTML =
-         <div class="empty-message">
-      <h3>Nenhum capítulo em PT-BR disponível</h3>
-      <p>Este mangá ainda não possui capítulos em português brasileiro no MangaDex.</p>
-    </div>
-        ;
+      chaptersDiv.innerHTML = `
+        <div class="empty-message">
+          <h3>Nenhum capítulo em PT-BR disponível</h3>
+
+          <p>
+            Este mangá ainda não possui
+            capítulos em português brasileiro.
+          </p>
+        </div>
+      `;
 
       return;
 
@@ -65,16 +76,15 @@ const response = await fetch(`${API_BASE}/api/chapters?id=${mangaId}`);
     validChapters.forEach((chapter) => {
 
       chaptersDiv.innerHTML += `
-
         <a
           href="./chapter.html?id=${chapter.id}"
           class="chapter-item"
         >
 
-          Capítulo ${chapter.attributes.chapter || "?"}
+          Capítulo
+          ${chapter.attributes.chapter || "?"}
 
         </a>
-
       `;
 
     });
