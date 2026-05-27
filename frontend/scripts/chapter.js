@@ -1,7 +1,10 @@
 const API_BASE = "https://kairodex.vercel.app";
 
 const params = new URLSearchParams(window.location.search);
+
 const chapterId = params.get("id");
+
+const source = params.get("source") || "mangadex";
 
 const reader = document.getElementById("reader");
 
@@ -9,10 +12,49 @@ async function loadChapter() {
   try {
     reader.innerHTML = "<p>Carregando capítulo...</p>";
 
-    const response = await fetch(`${API_BASE}/api/chapter?id=${chapterId}`);
-    const data = await response.json();
+    localStorage.setItem(
+      "lastChapter",
+      JSON.stringify({
+        chapterId,
+        mangaId: params.get("manga"),
+        source,
+        updatedAt: Date.now()
+      })
+    );
 
-    console.log("Dados completos:", data);
+    if (source === "manual") {
+      const response = await fetch(
+        `${API_BASE}/api/manual-reader?id=${chapterId}`
+      );
+
+      const data = await response.json();
+
+      if (!data.pages || data.pages.length === 0) {
+        reader.innerHTML = "<p>Capítulo manual sem páginas.</p>";
+        return;
+      }
+
+      reader.innerHTML = "";
+
+      data.pages.forEach((page, index) => {
+        reader.innerHTML += `
+          <img
+            src="${page}"
+            class="reader-image"
+            alt="Página ${index + 1}"
+            loading="lazy"
+          >
+        `;
+      });
+
+      return;
+    }
+
+    const response = await fetch(
+      `${API_BASE}/api/chapter?id=${chapterId}`
+    );
+
+    const data = await response.json();
 
     if (
       !data.baseUrl ||
@@ -49,14 +91,5 @@ async function loadChapter() {
     reader.innerHTML = "<p>Erro ao carregar capítulo.</p>";
   }
 }
-
-localStorage.setItem(
-  "lastChapter",
-  JSON.stringify({
-    chapterId,
-    mangaId: params.get("manga"),
-    updatedAt: Date.now()
-  })
-);
 
 loadChapter();
