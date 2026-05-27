@@ -1,3 +1,10 @@
+import { db } from "./firebase.js";
+
+import {
+  doc,
+  getDoc
+} from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+
 const API_BASE = "https://kairodex.vercel.app";
 
 const params = new URLSearchParams(window.location.search);
@@ -21,6 +28,39 @@ async function loadChapter() {
         updatedAt: Date.now()
       })
     );
+
+    if (source === "firebase") {
+      const chapterRef = doc(db, "manualChapters", chapterId);
+
+      const chapterSnap = await getDoc(chapterRef);
+
+      if (!chapterSnap.exists()) {
+        reader.innerHTML = "<p>Capítulo não encontrado.</p>";
+        return;
+      }
+
+      const chapter = chapterSnap.data();
+
+      if (!chapter.pages || chapter.pages.length === 0) {
+        reader.innerHTML = "<p>Capítulo sem páginas.</p>";
+        return;
+      }
+
+      reader.innerHTML = "";
+
+      chapter.pages.forEach((page, index) => {
+        reader.innerHTML += `
+          <img
+            src="${page}"
+            class="reader-image"
+            alt="Página ${index + 1}"
+            loading="lazy"
+          >
+        `;
+      });
+
+      return;
+    }
 
     if (source === "manual") {
       const response = await fetch(
