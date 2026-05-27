@@ -77,7 +77,7 @@ async function loadChapters() {
 
       chaptersDiv.innerHTML += `
         <a
-          href="./chapter.html?id=${chapter.id}"
+          href="./chapter.html?id=${chapter.id}&manga=${mangaId}"
           class="chapter-item"
         >
 

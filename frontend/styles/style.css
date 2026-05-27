@@ -525,3 +525,104 @@ main{
   max-width: 900px;
   border-radius: 10px;
 }
+
+.continue-reading {
+  margin-bottom: 30px;
+}
+
+.continue-card {
+  display: block;
+  background: #181818;
+  padding: 20px;
+  border-radius: 15px;
+  text-decoration: none;
+  color: white;
+  transition: 0.3s;
+}
+
+.continue-card:hover {
+  transform: translateY(-3px);
+}
+
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 999;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  padding: 15px 25px;
+
+  background: rgba(0,0,0,0.7);
+
+  backdrop-filter: blur(10px);
+}
+
+.nav-links {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.nav-links a,
+.nav-links button {
+  color: white;
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+#menu-toggle {
+  display: none;
+
+  background: none;
+  border: none;
+  color: white;
+
+  font-size: 24px;
+}
+
+@media (max-width: 768px) {
+
+  #menu-toggle {
+    display: block;
+  }
+
+  .nav-links {
+    position: fixed;
+
+    top: 70px;
+    right: -100%;
+
+    width: 220px;
+    height: 100vh;
+
+    background: #111;
+
+    flex-direction: column;
+
+    padding: 30px;
+
+    transition: 0.3s;
+  }
+
+  .nav-links.active {
+    right: 0;
+  }
+
+}
+
+.user-mini {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#user-photo {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+}

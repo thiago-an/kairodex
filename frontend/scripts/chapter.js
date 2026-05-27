@@ -50,4 +50,13 @@ async function loadChapter() {
   }
 }
 
+localStorage.setItem(
+  "lastChapter",
+  JSON.stringify({
+    chapterId,
+    mangaId: params.get("manga"),
+    updatedAt: Date.now()
+  })
+);
+
 loadChapter();

@@ -42,4 +42,47 @@ logoutBtn.addEventListener("click", async () => {
 
   window.location.href = "/pages/login.html";
 
+const continueReadingDiv =
+  document.getElementById("continue-reading");
+
+const lastChapter =
+  JSON.parse(localStorage.getItem("lastChapter"));
+
+if (lastChapter && lastChapter.chapterId) {
+
+  continueReadingDiv.innerHTML = `
+
+    <a
+      href="./chapter.html?id=${lastChapter.chapterId}&manga=${lastChapter.mangaId}"
+      class="continue-card"
+    >
+
+      <h3>Continuar leitura</h3>
+
+      <p>
+        Clique para voltar ao último capítulo lido.
+      </p>
+
+    </a>
+
+  `;
+
+}
+
+const menuToggle =
+  document.getElementById("menu-toggle");
+
+const navLinks =
+  document.getElementById("nav-links");
+
+if(menuToggle){
+
+  menuToggle.addEventListener("click", ()=>{
+
+    navLinks.classList.toggle("active");
+
+  });
+
+}
+
 });

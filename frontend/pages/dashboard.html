@@ -4,70 +4,80 @@
 <head>
   <meta charset="UTF-8">
   <title>KairoDEX</title>
-
   <link rel="stylesheet" href="/styles/style.css">
+  <link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#ff004c">
 </head>
+
+<script src="/scripts/pwa.js"></script>
 
 <body>
 
   <nav class="navbar">
 
-    <div class="logo">
-      KairoDEX
-    </div>
+  <div class="logo">
+    KairoDEX
+  </div>
 
-    <a href="pages/library.html" class="library-btn">
+  <button id="menu-toggle">
+    ☰
+  </button>
 
-  📚 Minha Biblioteca
+  <div class="nav-links" id="nav-links">
 
-</a>
+  <div class="user-mini">
 
-<a href="/pages/favorites.html">
-  Favoritos
-</a>
+  <img id="user-photo">
 
-    <div class="user-area">
+  <span id="user-name"></span>
 
-      <img id="user-photo">
+</div>
 
-      <span id="user-name"></span>
+    <a href="/pages/library.html">
+      📚 Biblioteca
+    </a>
 
-      <button id="logout-btn">
-        Sair
-      </button>
+    <a href="/pages/favorites.html">
+      ❤️ Favoritos
+    </a>
 
-    </div>
+    <button id="logout-btn">
+      Sair
+    </button>
 
-  </nav>
+  </div>
+
+</nav>
 
   <main>
 
-    <h1>Catálogo</h1>
-    <div id="continue-reading"></div>
+    <section class="hero">
+      <div>
+        <h1>KairoDEX</h1>
+        <p>Leia mangás em português de forma simples e organizada.</p>
+      </div>
+    </section>
 
- <section class="hero">
-  <div>
-    <h1>KairoDEX</h1>
-    <p>Leia mangás em português de forma simples e organizada.</p>
-  </div>
-</section>
- 
-<input
-  type="text"
-  id="search-input"
-  class="search-input"
-  placeholder="Buscar mangá..."
-/>
+    <section class="continue-reading">
+      <h2>Continuar lendo</h2>
+      <div id="continue-reading"></div>
+    </section>
+
+    <h1>Catálogo</h1>
+
+    <input
+      type="text"
+      id="search-input"
+      class="search-input"
+      placeholder="Buscar mangá..."
+    >
 
     <div id="manga-grid"></div>
 
   </main>
 
   <script type="module" src="/scripts/dashboard.js"></script>
-
   <script type="module" src="/scripts/mangas.js"></script>
-
-  <script type="module" src="/scripts/continue.js"></script>
 
 </body>
 
