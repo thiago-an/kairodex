@@ -5,7 +5,7 @@ import {
   query,
   where,
   getDocs
-} from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 const API_BASE = "https://kairodex.vercel.app";
 
