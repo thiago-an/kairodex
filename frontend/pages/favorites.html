@@ -1,41 +1,44 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
-
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <title>Favoritos | KairoDEX</title>
 
-  <link rel="stylesheet" href="/styles/style.css">
-
-  <link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#ff004c">
-
+  <link rel="stylesheet" href="/styles/style.css" />
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#ff004c" />
 </head>
 
-<script src="/scripts/pwa.js"></script>
-
-<body>
+<body class="favorites-page">
 
   <nav class="navbar">
+    <div class="logo">KairoDEX</div>
 
-    <div class="logo">
-      KairoDEX
+    <div class="nav-links">
+      <a href="/pages/dashboard.html">🏠 Home</a>
+      <a href="/pages/library.html">📚 Biblioteca</a>
     </div>
-
   </nav>
 
   <main>
 
-    <h1>❤️ Favoritos</h1>
+    <section class="home-section">
+      <div class="section-header">
+        <div>
+          <h1>❤️ Favoritos</h1>
+          <span>Seus mangás salvos</span>
+        </div>
+      </div>
 
-    <div id="favorites-grid"></div>
+      <div id="favorites-grid" class="manga-grid"></div>
+    </section>
 
   </main>
 
-  <script type="module" src="/scripts/library.js"></script>
+  <script src="/scripts/pwa.js"></script>
+  <script type="module" src="/scripts/favorites-page.js"></script>
 
 </body>
-
 </html>

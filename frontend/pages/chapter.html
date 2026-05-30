@@ -1,39 +1,50 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <meta charset="UTF-8">
+  <title>Leitor | KairoDEX</title>
 
-  <title>Leitor - KairoDEX</title>
-
-  <link rel="stylesheet" href="/styles/style.css">
-
-  <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#ff004c">
-
+  <link rel="stylesheet" href="/styles/style.css" />
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#ff004c" />
 </head>
 
-<script src="/scripts/pwa.js"></script>
+<body class="reader-page">
 
-<body>
+  <header class="reader-header">
 
-  <main class="reader-page">
+    <a
+      href="/pages/dashboard.html"
+      class="back-btn"
+      id="reader-back-btn"
+    >
+      ← Voltar
+    </a>
 
-    <div class="reader-header">
+    <div class="chapter-nav">
 
-      <a href="javascript:history.back()" class="back-btn">
-        ← Voltar
-      </a>
+      <button id="prev-chapter">
+        ← Capítulo anterior
+      </button>
+
+      <button id="next-chapter">
+        Próximo capítulo →
+      </button>
 
     </div>
 
-    <div id="reader"></div>
+  </header>
+
+  <main>
+
+    <section id="reader"></section>
 
   </main>
 
+  <script src="/scripts/pwa.js"></script>
   <script type="module" src="/scripts/chapter.js"></script>
 
 </body>
-
 </html>

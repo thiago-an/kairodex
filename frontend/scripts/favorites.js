@@ -10,27 +10,139 @@ import {
   setDoc
 } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-const auth = getAuth(app);
+/* =========================
+   FIREBASE
+========================= */
 
-const params = new URLSearchParams(window.location.search);
-const mangaId = params.get("id");
+const auth =
+  getAuth(app);
 
-const favoriteBtn = document.getElementById("favorite-btn");
+/* =========================
+   PARAMS / ELEMENTOS
+========================= */
 
-onAuthStateChanged(auth, (user) => {
-  if (!user) return;
+const params =
+  new URLSearchParams(window.location.search);
 
-  favoriteBtn.addEventListener("click", async () => {
-    const title = document.getElementById("manga-title").innerText;
-    const cover = document.getElementById("manga-cover").src;
+const mangaId =
+  params.get("id");
 
-    await setDoc(doc(db, "users", user.uid, "favorites", mangaId), {
-      mangaId,
-      title,
-      cover,
-      createdAt: Date.now()
+const favoriteBtn =
+  document.getElementById("favorite-btn");
+
+/* =========================
+   STORAGE
+========================= */
+
+function getLocalFavorites() {
+  return JSON.parse(
+    localStorage.getItem("favorites")
+  ) || [];
+}
+
+function setLocalFavorites(favorites) {
+  localStorage.setItem(
+    "favorites",
+    JSON.stringify(favorites)
+  );
+}
+
+function getCurrentManga() {
+  return JSON.parse(
+    localStorage.getItem("currentManga")
+  );
+}
+
+function isFavorite(mangaId) {
+  const favorites =
+    getLocalFavorites();
+
+  return favorites.some((item) => {
+    return item.id === mangaId || item.mangaId === mangaId;
+  });
+}
+
+function saveFavoriteLocal(manga) {
+  const favorites =
+    getLocalFavorites();
+
+  const exists =
+    favorites.some((item) => {
+      return item.id === manga.id || item.mangaId === manga.mangaId;
     });
 
-    alert("Mangá adicionado aos favoritos!");
+  if (!exists) {
+    favorites.unshift(manga);
+
+    setLocalFavorites(favorites);
+  }
+}
+
+/* =========================
+   UI
+========================= */
+
+function markAsFavorite() {
+  if (!favoriteBtn) return;
+
+  favoriteBtn.innerText =
+    "❤️ Favoritado";
+
+  favoriteBtn.disabled =
+    true;
+}
+
+/* =========================
+   FIRESTORE
+========================= */
+
+async function saveFavoriteFirestore(user, manga) {
+  await setDoc(
+    doc(db, "users", user.uid, "favorites", mangaId),
+    manga
+  );
+}
+
+/* =========================
+   INIT
+========================= */
+
+onAuthStateChanged(auth, (user) => {
+  if (!user || !favoriteBtn || !mangaId) return;
+
+  if (isFavorite(mangaId)) {
+    markAsFavorite();
+  }
+
+  favoriteBtn.addEventListener("click", async () => {
+    const currentManga =
+      getCurrentManga();
+
+    if (!currentManga) {
+      alert("Aguarde o mangá carregar antes de favoritar.");
+      return;
+    }
+
+    const favoriteData = {
+      ...currentManga,
+      id: mangaId,
+      mangaId,
+      createdAt: Date.now()
+    };
+
+    try {
+      await saveFavoriteFirestore(user, favoriteData);
+
+      saveFavoriteLocal(favoriteData);
+
+      markAsFavorite();
+
+      alert("Mangá adicionado aos favoritos!");
+
+    } catch (error) {
+      console.log("Erro favorito:", error);
+
+      alert("Erro ao favoritar mangá.");
+    }
   });
 });

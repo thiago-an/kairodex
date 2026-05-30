@@ -1,31 +1,68 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
-  <meta charset="UTF-8">
-  <title>Mangá - KairoDEX</title>
-  <link rel="stylesheet" href="/styles/style.css">
-  <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#ff004c">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Mangá | KairoDEX</title>
+
+  <link rel="stylesheet" href="/styles/style.css" />
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#ff004c" />
 </head>
 
-<script src="/scripts/pwa.js"></script>
-
-<body>
+<body class="manga-page">
 
   <main class="manga-detail-page">
 
+    <a href="/pages/dashboard.html" class="back-btn">
+      ← Voltar para Home
+    </a>
+
     <section class="manga-header">
 
-      <img id="manga-cover" alt="Capa do mangá">
+      <img
+        id="manga-cover"
+        alt="Capa do mangá"
+      />
 
       <div class="manga-info">
 
-        <h1 id="manga-title"></h1>
+        <span class="hero-badge">
+          MangaDex
+        </span>
 
-        <p id="manga-description"></p>
+        <h1 id="manga-title">
+          Carregando...
+        </h1>
 
-        <button id="favorite-btn">❤️ Favoritar</button>
+        <p id="manga-description">
+          Buscando informações do mangá.
+        </p>
+
+        <button id="favorite-btn">
+          ❤️ Favoritar
+        </button>
+
+        <div class="library-actions">
+
+  <button class="library-status-btn" data-status="reading">
+    📖 Lendo
+  </button>
+
+  <button class="library-status-btn" data-status="completed">
+    ✅ Concluído
+  </button>
+
+  <button class="library-status-btn" data-status="planned">
+    📚 Planejo ler
+  </button>
+
+  <button class="library-status-btn" data-status="dropped">
+    ❌ Abandonado
+  </button>
+
+</div>
 
         <div id="manga-genres"></div>
 
@@ -35,7 +72,12 @@
 
     <section class="chapters-section">
 
-      <h2>Capítulos</h2>
+      <div class="section-header">
+        <div>
+          <h2>Capítulos</h2>
+          <span>Escolha um capítulo para ler</span>
+        </div>
+      </div>
 
       <div id="chapters"></div>
 
@@ -43,10 +85,12 @@
 
   </main>
 
+  <script src="/scripts/pwa.js"></script>
+
   <script type="module" src="/scripts/manga.js"></script>
   <script type="module" src="/scripts/chapters.js"></script>
   <script type="module" src="/scripts/favorites.js"></script>
+  <script type="module" src="/scripts/library-actions.js"></script>
 
 </body>
-
 </html>

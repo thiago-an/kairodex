@@ -9,11 +9,18 @@ export default async function handler(req, res) {
     const search = req.query.search || "";
 
     const params = new URLSearchParams();
-    params.append("limit", "20");
-    params.append("order[followedCount]", "desc");
-    params.append("includes[]", "cover_art");
 
-    if (search) params.append("title", search);
+    params.append("limit", "30");
+    params.append("includes[]", "cover_art");
+    params.append("availableTranslatedLanguage[]", "pt-br");
+    params.append("order[followedCount]", "desc");
+
+    params.append("contentRating[]", "safe");
+    params.append("contentRating[]", "suggestive");
+
+    if (search) {
+      params.append("title", search);
+    }
 
     const response = await fetch(
       `https://api.mangadex.org/manga?${params.toString()}`
@@ -22,6 +29,7 @@ export default async function handler(req, res) {
     const data = await response.json();
 
     res.status(200).json(data);
+
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

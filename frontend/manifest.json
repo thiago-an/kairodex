@@ -5,7 +5,7 @@
   "display": "standalone",
   "background_color": "#0f0f0f",
   "theme_color": "#ff004c",
-  "description": "Leitor de mangás em português brasileiro.",
+  "description": "Leitor de mangás em português.",
   "icons": [
     {
       "src": "/assets/icon-192.png",

@@ -1,108 +1,146 @@
-import {
-  storage,
-  db
-} from "./firebase.js";
+import { db, storage } from "./firebase.js";
 
 import {
   ref,
   uploadBytes,
   getDownloadURL
-} from "https://www.gstatic.com/firebasejs/10.13.2/firebase-storage.js";
+} from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
 
 import {
   collection,
-  addDoc
-} from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+  addDoc,
+  doc,
+  deleteDoc
+} from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-const mangaIdInput =
-  document.getElementById("manga-id");
+/* ELEMENTOS */
 
-const chapterNumberInput =
-  document.getElementById("chapter-number");
+const mangaIdInput = document.getElementById("manga-id");
+const chapterNumberInput = document.getElementById("chapter-number");
+const chapterTitleInput = document.getElementById("chapter-title");
+const chapterPagesInput = document.getElementById("chapter-pages");
 
-const chapterTitleInput =
-  document.getElementById("chapter-title");
+const uploadBtn = document.getElementById("upload-btn");
+const uploadStatus = document.getElementById("upload-status");
+const previewPages = document.getElementById("preview-pages");
 
-const chapterPagesInput =
-  document.getElementById("chapter-pages");
+const deleteChapterInput = document.getElementById("delete-chapter-id");
+const deleteChapterBtn = document.getElementById("delete-chapter-btn");
 
-const uploadBtn =
-  document.getElementById("upload-btn");
+/* HELPERS */
 
-const uploadStatus =
-  document.getElementById("upload-status");
+function sortFiles(files) {
+  return Array.from(files).sort((a, b) => {
+    return a.name.localeCompare(b.name, undefined, {
+      numeric: true,
+      sensitivity: "base"
+    });
+  });
+}
 
-uploadBtn.addEventListener("click", async () => {
+function setStatus(message) {
+  if (uploadStatus) {
+    uploadStatus.innerHTML = `<p>${message}</p>`;
+  }
+}
 
-  try {
+/* PREVIEW */
 
-    uploadStatus.innerHTML =
-      "<p>Enviando capítulo...</p>";
+if (chapterPagesInput) {
+  chapterPagesInput.addEventListener("change", () => {
+    previewPages.innerHTML = "";
 
-    const mangaId =
-      mangaIdInput.value.trim();
+    const files = sortFiles(chapterPagesInput.files);
 
-    const chapterNumber =
-      chapterNumberInput.value.trim();
+    files.forEach((file, index) => {
+      const imgUrl = URL.createObjectURL(file);
 
-    const chapterTitle =
-      chapterTitleInput.value.trim();
+      previewPages.innerHTML += `
+        <div class="preview-card">
+          <span>Página ${index + 1}</span>
+          <img src="${imgUrl}">
+        </div>
+      `;
+    });
+  });
+}
 
-    const files =
-      Array.from(chapterPagesInput.files);
+/* UPLOAD */
 
-    if (
-      !mangaId ||
-      !chapterNumber ||
-      files.length === 0
-    ) {
+if (uploadBtn) {
+  uploadBtn.addEventListener("click", async () => {
+    try {
+      setStatus("Enviando capítulo...");
 
-      uploadStatus.innerHTML =
-        "<p>Preencha todos os campos.</p>";
+      const mangaId = mangaIdInput.value.trim();
+      const chapterNumber = chapterNumberInput.value.trim();
+      const chapterTitle = chapterTitleInput.value.trim();
+      const files = sortFiles(chapterPagesInput.files);
 
-      return;
+      if (!mangaId || !chapterNumber || files.length === 0) {
+        setStatus("Preencha o ID do mangá, número do capítulo e páginas.");
+        return;
+      }
 
-    }
+      const imageUrls = [];
 
-    const imageUrls = [];
+      for (const file of files) {
+        const storageRef = ref(
+          storage,
+          `chapters/${mangaId}/${chapterNumber}/${file.name}`
+        );
 
-    for (const file of files) {
+        await uploadBytes(storageRef, file);
 
-      const storageRef = ref(
-        storage,
-        `chapters/${mangaId}/${chapterNumber}/${file.name}`
-      );
+        const url = await getDownloadURL(storageRef);
 
-      await uploadBytes(storageRef, file);
+        imageUrls.push(url);
+      }
 
-      const url =
-        await getDownloadURL(storageRef);
-
-      imageUrls.push(url);
-
-    }
-
-    await addDoc(
-      collection(db, "manualChapters"),
-      {
+      await addDoc(collection(db, "manualChapters"), {
         mangaId,
         chapterNumber,
         chapterTitle,
         pages: imageUrls,
+        source: "firebase",
         createdAt: Date.now()
-      }
-    );
+      });
 
-    uploadStatus.innerHTML =
-      "<p>Capítulo publicado com sucesso.</p>";
+      setStatus("Capítulo publicado com sucesso.");
 
-  } catch (error) {
+      mangaIdInput.value = "";
+      chapterNumberInput.value = "";
+      chapterTitleInput.value = "";
+      chapterPagesInput.value = "";
+      previewPages.innerHTML = "";
 
-    console.log(error);
+    } catch (error) {
+      console.log(error);
+      setStatus(`Erro: ${error.message}`);
+    }
+  });
+}
 
-    uploadStatus.innerHTML =
-      "<p>Erro ao publicar capítulo.</p>";
+/* DELETE */
 
-  }
+if (deleteChapterBtn) {
+  deleteChapterBtn.addEventListener("click", async () => {
+    const chapterId = deleteChapterInput.value.trim();
 
-});
+    if (!chapterId) {
+      setStatus("Digite o ID do capítulo.");
+      return;
+    }
+
+    try {
+      await deleteDoc(doc(db, "manualChapters", chapterId));
+
+      setStatus("Capítulo excluído com sucesso.");
+      deleteChapterInput.value = "";
+
+    } catch (error) {
+      console.log(error);
+      setStatus(`Erro ao excluir: ${error.message}`);
+    }
+  });
+}

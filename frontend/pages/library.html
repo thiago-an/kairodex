@@ -1,41 +1,86 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <meta charset="UTF-8">
+  <title>Biblioteca | KairoDEX</title>
 
-  <title>Minha Biblioteca</title>
-
-  <link rel="stylesheet" href="/styles/style.css">
-
-  <link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#ff004c">
-
+  <link rel="stylesheet" href="/styles/style.css" />
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#ff004c" />
 </head>
 
-<script src="/scripts/pwa.js"></script>
-
-<body>
+<body class="library-page">
 
   <nav class="navbar">
+    <div class="logo">KairoDEX</div>
 
-    <div class="logo">
-      KairoDEX
+    <div class="nav-links">
+      <a href="/pages/dashboard.html">🏠 Home</a>
+      <a href="/pages/favorites.html">❤️ Favoritos</a>
     </div>
-
   </nav>
 
   <main>
 
-    <h1>📚 Minha Biblioteca</h1>
+    <section class="home-section">
+      <div class="section-header">
+        <div>
+          <h1>📚 Minha Biblioteca</h1>
+          <span>Organize seus mangás por status de leitura</span>
+        </div>
+      </div>
+    </section>
 
-    <div id="library-grid"></div>
+    <section class="home-section">
+      <div class="section-header">
+        <div>
+          <h2>📖 Lendo</h2>
+          <span>Leituras em andamento</span>
+        </div>
+      </div>
+
+      <div id="library-reading" class="manga-grid"></div>
+    </section>
+
+    <section class="home-section">
+      <div class="section-header">
+        <div>
+          <h2>✅ Concluídos</h2>
+          <span>Mangás finalizados</span>
+        </div>
+      </div>
+
+      <div id="library-completed" class="manga-grid"></div>
+    </section>
+
+    <section class="home-section">
+      <div class="section-header">
+        <div>
+          <h2>📚 Planejo ler</h2>
+          <span>Salvos para ler depois</span>
+        </div>
+      </div>
+
+      <div id="library-planned" class="manga-grid"></div>
+    </section>
+
+    <section class="home-section">
+      <div class="section-header">
+        <div>
+          <h2>❌ Abandonados</h2>
+          <span>Leituras pausadas ou abandonadas</span>
+        </div>
+      </div>
+
+      <div id="library-dropped" class="manga-grid"></div>
+    </section>
 
   </main>
 
+  <script src="/scripts/pwa.js"></script>
   <script type="module" src="/scripts/library.js"></script>
 
 </body>
-
 </html>

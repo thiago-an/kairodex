@@ -1,84 +1,192 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
-  <meta charset="UTF-8">
-  <title>KairoDEX</title>
-  <link rel="stylesheet" href="/styles/style.css">
-  <link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#ff004c">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>KairoDEX | Dashboard</title>
+
+  <link rel="stylesheet" href="/styles/style.css" />
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#ff004c" />
 </head>
 
-<script src="/scripts/pwa.js"></script>
-
-<body>
+<body class="dashboard-page">
 
   <nav class="navbar">
+    <div class="logo">KairoDEX</div>
 
-  <div class="logo">
-    KairoDEX
-  </div>
-
-  <button id="menu-toggle">
-    ☰
-  </button>
-
-  <div class="nav-links" id="nav-links">
-
-  <div class="user-mini">
-
-  <img id="user-photo">
-
-  <span id="user-name"></span>
-
-</div>
-
-    <a href="/pages/library.html">
-      📚 Biblioteca
-    </a>
-
-    <a href="/pages/favorites.html">
-      ❤️ Favoritos
-    </a>
-
-    <button id="logout-btn">
-      Sair
+    <button id="menu-toggle" aria-label="Abrir menu">
+      ☰
     </button>
 
-  </div>
+    <div class="nav-links" id="nav-links">
+      <div class="user-mini">
+        <img id="user-photo" alt="Foto do usuário" />
+        <span id="user-name"></span>
+      </div>
 
-</nav>
+      <a href="/pages/library.html">📚 Biblioteca</a>
+      <a href="/pages/favorites.html">❤️ Favoritos</a>
 
-  <main>
+      <button id="logout-btn">Sair</button>
+    </div>
+  </nav>
 
-    <section class="hero">
-      <div>
-        <h1>KairoDEX</h1>
-        <p>Leia mangás em português de forma simples e organizada.</p>
+  <main class="dashboard-main">
+
+    <section class="hero premium-hero" id="dynamic-hero">
+      <div class="hero-content">
+        <span class="hero-badge">KairoDEX Premium Home</span>
+
+        <h1>Leia seus mangás em um só lugar</h1>
+
+        <p>
+          Continue suas leituras, acompanhe novos capítulos e explore seu catálogo
+          pessoal com uma experiência moderna.
+        </p>
+
+        <div class="hero-actions">
+          <a href="/pages/library.html" class="hero-btn primary">
+            Ver Biblioteca
+          </a>
+
+          <a href="/pages/favorites.html" class="hero-btn secondary">
+            Meus Favoritos
+          </a>
+        </div>
+      </div>
+
+      <div class="hero-glow"></div>
+      <div class="hero-particles"></div>
+    </section>
+
+    <section class="continue-reading home-section">
+      <div class="section-header">
+        <div>
+          <h2>Continuar lendo</h2>
+          <span>Retome de onde parou</span>
+        </div>
+      </div>
+
+      <div id="continue-reading" class="horizontal-list"></div>
+    </section>
+
+    <section class="recent-section home-section">
+      <div class="section-header">
+        <div>
+          <h2>Lidos recentemente</h2>
+          <span>Seu histórico recente de leitura</span>
+        </div>
+      </div>
+
+      <div id="recent-history" class="horizontal-list"></div>
+    </section>
+
+    <section class="latest-section home-section">
+      <div class="section-header">
+        <div>
+          <h2>Últimos adicionados</h2>
+          <span>Capítulos enviados pelo Admin</span>
+        </div>
+      </div>
+
+      <div class="latest-carousel-wrap">
+        <button class="carousel-btn left" id="latest-left">‹</button>
+
+        <div id="latest-chapters" class="horizontal-list latest-carousel"></div>
+
+        <button class="carousel-btn right" id="latest-right">›</button>
       </div>
     </section>
 
-    <section class="continue-reading">
-      <h2>Continuar lendo</h2>
-      <div id="continue-reading"></div>
+    <section class="trending-section home-section">
+      <div class="section-header">
+        <div>
+          <h2>🔥 Em destaque</h2>
+          <span>Mais acessados do momento</span>
+        </div>
+      </div>
+
+      <div id="trending-grid" class="trending-grid"></div>
     </section>
 
-    <h1>Catálogo</h1>
+    <section class="favorites-home home-section">
+      <div class="section-header">
+        <div>
+          <h2>❤️ Seus favoritos</h2>
+          <span>Mangás salvos por você</span>
+        </div>
+      </div>
 
-    <input
-      type="text"
-      id="search-input"
-      class="search-input"
-      placeholder="Buscar mangá..."
-    >
+      <div id="favorites-home-grid" class="favorites-home-grid"></div>
+    </section>
 
-    <div id="manga-grid"></div>
+    <section class="library-home home-section">
+
+  <div class="section-header">
+    <div>
+      <h2>📚 Da sua biblioteca</h2>
+      <span>Continue acompanhando seus mangás salvos</span>
+    </div>
+  </div>
+
+  <div
+    id="library-home-grid"
+    class="favorites-home-grid"
+  ></div>
+
+</section>
+
+    <section class="quick-categories home-section">
+      <div class="section-header">
+        <div>
+          <h2>Categorias rápidas</h2>
+          <span>Explore por gênero</span>
+        </div>
+      </div>
+
+      <div class="category-list">
+        <button class="category-btn" data-search="action">Ação</button>
+        <button class="category-btn" data-search="romance">Romance</button>
+        <button class="category-btn" data-search="comedy">Comédia</button>
+        <button class="category-btn" data-search="fantasy">Fantasia</button>
+        <button class="category-btn" data-search="horror">Terror</button>
+        <button class="category-btn" data-search="sports">Esportes</button>
+      </div>
+    </section>
+
+    <section class="catalog-section home-section">
+      <div class="section-header">
+        <div>
+          <h2>Catálogo</h2>
+          <span>Populares no KairoDEX</span>
+        </div>
+      </div>
+
+      <input
+        type="text"
+        id="search-input"
+        class="search-input"
+        placeholder="Buscar mangá..."
+      />
+
+      <div class="catalog-carousel-wrap">
+        <button class="carousel-btn left" id="catalog-left">‹</button>
+
+        <div id="manga-grid" class="manga-grid catalog-carousel"></div>
+
+        <button class="carousel-btn right" id="catalog-right">›</button>
+      </div>
+    </section>
 
   </main>
 
+  <script src="/scripts/pwa.js"></script>
+
   <script type="module" src="/scripts/dashboard.js"></script>
   <script type="module" src="/scripts/mangas.js"></script>
+  <script type="module" src="/scripts/latest.js"></script>
 
 </body>
-
 </html>

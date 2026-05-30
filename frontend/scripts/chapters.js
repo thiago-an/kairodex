@@ -7,74 +7,237 @@ import {
   getDocs
 } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-const API_BASE = "https://kairodex.vercel.app";
+import {
+  SOURCES,
+  getSourceLabel
+} from "./sources.js";
 
-const params = new URLSearchParams(window.location.search);
-const mangaId = params.get("id");
+/* =========================
+   CONFIG
+========================= */
 
-const chaptersDiv = document.getElementById("chapters");
+const API_BASE =
+  "https://kairodex.vercel.app";
 
-async function loadChapters() {
-  try {
-    chaptersDiv.innerHTML = "<p>Carregando capítulos...</p>";
+/* =========================
+   PARAMS / ELEMENTOS
+========================= */
 
-    const manualQuery = query(
+const params =
+  new URLSearchParams(window.location.search);
+
+const mangaId =
+  params.get("id");
+
+const chaptersDiv =
+  document.getElementById("chapters");
+
+/* =========================
+   HELPERS
+========================= */
+
+function getChapterNumber(value) {
+  const number =
+    Number(value);
+
+  return Number.isNaN(number)
+    ? 999999
+    : number;
+}
+
+function sortByChapterNumber(a, b) {
+  return getChapterNumber(a.number) - getChapterNumber(b.number);
+}
+
+function showChaptersMessage(title, text = "") {
+  if (!chaptersDiv) return;
+
+  chaptersDiv.innerHTML = `
+    <div class="empty-message">
+      <h3>${title}</h3>
+      ${text ? `<p>${text}</p>` : ""}
+    </div>
+  `;
+}
+
+function saveChaptersToStorage(chapters) {
+  if (!mangaId) return;
+
+  localStorage.setItem(
+    `chapters-${mangaId}`,
+    JSON.stringify(chapters)
+  );
+}
+
+/* =========================
+   FIREBASE CHAPTERS
+========================= */
+
+async function fetchFirebaseChapters() {
+  const manualQuery =
+    query(
       collection(db, "manualChapters"),
       where("mangaId", "==", mangaId)
     );
 
-    const manualSnapshot = await getDocs(manualQuery);
+  const manualSnapshot =
+    await getDocs(manualQuery);
 
-    const manualChapters = [];
+  const chapters =
+    [];
 
-    manualSnapshot.forEach((doc) => {
-      manualChapters.push({
-        id: doc.id,
-        ...doc.data()
-      });
+  manualSnapshot.forEach((doc) => {
+    const chapter =
+      doc.data();
+
+    chapters.push({
+      id: doc.id,
+      source: SOURCES.FIREBASE,
+      number: chapter.chapterNumber || "?",
+      title:
+        chapter.chapterTitle ||
+        `Capítulo ${chapter.chapterNumber || "?"}`
     });
+  });
 
-    const response = await fetch(`${API_BASE}/api/chapters?id=${mangaId}`);
-    const result = await response.json();
+  return chapters;
+}
 
-    const apiChapters = Array.isArray(result.data) ? result.data : [];
+/* =========================
+   MANGADEX CHAPTERS
+========================= */
 
-    chaptersDiv.innerHTML = "";
+async function fetchMangaDexChapters() {
+  const response =
+    await fetch(`${API_BASE}/api/chapters?id=${mangaId}`);
 
-    manualChapters.forEach((chapter) => {
-      chaptersDiv.innerHTML += `
-        <a
-          href="./chapter.html?id=${chapter.id}&source=firebase&manga=${mangaId}"
-          class="chapter-item"
-        >
-          Capítulo ${chapter.chapterNumber} - ${chapter.chapterTitle || ""}
-        </a>
-      `;
-    });
+  const result =
+    await response.json();
 
-    apiChapters.forEach((chapter) => {
-      chaptersDiv.innerHTML += `
-        <a
-          href="./chapter.html?id=${chapter.id}&source=mangadex&manga=${mangaId}"
-          class="chapter-item"
-        >
-          Capítulo ${chapter.attributes.chapter || "?"}
-        </a>
-      `;
-    });
+  if (!response.ok || result.error) {
+    throw new Error(
+      result.error || "Erro ao carregar capítulos MangaDex."
+    );
+  }
 
-    if (manualChapters.length === 0 && apiChapters.length === 0) {
-      chaptersDiv.innerHTML = `
-        <div class="empty-message">
-          <h3>Nenhum capítulo em PT-BR disponível</h3>
-          <p>Este mangá ainda não possui capítulos cadastrados.</p>
-        </div>
-      `;
-    }
+  const apiChapters =
+    Array.isArray(result.data)
+      ? result.data
+      : [];
+
+  return apiChapters.map((chapter) => {
+    const number =
+      chapter.attributes?.chapter || "?";
+
+    const title =
+      chapter.attributes?.title ||
+      `Capítulo ${number}`;
+
+    return {
+      id: chapter.id,
+      source: SOURCES.MANGADEX,
+      number,
+      title
+    };
+  });
+}
+
+/* =========================
+   FUTURO: COMICK
+========================= */
+
+async function fetchComickChapters() {
+  return [];
+}
+
+/* =========================
+   RENDER
+========================= */
+
+function createChapterItem(chapter) {
+  const link =
+    document.createElement("a");
+
+  link.href =
+    `/pages/chapter.html?id=${chapter.id}&source=${chapter.source}&manga=${mangaId}`;
+
+  link.className =
+    "chapter-item";
+
+  link.innerHTML = `
+    <strong>
+      ${chapter.title}
+    </strong>
+
+    <span>
+      ${getSourceLabel(chapter.source)}
+    </span>
+  `;
+
+  return link;
+}
+
+function renderChapters(chapters) {
+  if (!chaptersDiv) return;
+
+  if (!chapters.length) {
+    showChaptersMessage(
+      "Nenhum capítulo disponível",
+      "Este mangá ainda não possui capítulos cadastrados."
+    );
+
+    return;
+  }
+
+  chaptersDiv.innerHTML = "";
+
+  chapters.forEach((chapter) => {
+    chaptersDiv.appendChild(
+      createChapterItem(chapter)
+    );
+  });
+}
+
+/* =========================
+   INIT
+========================= */
+
+async function loadChapters() {
+  if (!mangaId || !chaptersDiv) return;
+
+  try {
+    showChaptersMessage(
+      "Carregando capítulos...",
+      "Buscando capítulos disponíveis."
+    );
+
+    const firebaseChapters =
+      await fetchFirebaseChapters();
+
+    const mangadexChapters =
+      await fetchMangaDexChapters();
+
+    const comickChapters =
+      await fetchComickChapters();
+
+    const allChapters =
+      [
+        ...firebaseChapters,
+        ...mangadexChapters,
+        ...comickChapters
+      ].sort(sortByChapterNumber);
+
+    saveChaptersToStorage(allChapters);
+
+    renderChapters(allChapters);
 
   } catch (error) {
-    console.log(error);
-    chaptersDiv.innerHTML = "<p>Erro ao carregar capítulos.</p>";
+    console.log("Erro chapters:", error);
+
+    showChaptersMessage(
+      "Erro ao carregar capítulos",
+      "Não foi possível buscar os capítulos deste mangá."
+    );
   }
 }
 

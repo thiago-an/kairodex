@@ -3,133 +3,431 @@ import { db } from "./firebase.js";
 import {
   doc,
   getDoc
-} from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-const API_BASE = "https://kairodex.vercel.app";
 
-const params = new URLSearchParams(window.location.search);
+import {
+  normalizeSource,
+  canReadSource
+} from "./sourceManager.js";
 
-const chapterId = params.get("id");
+import {
+  SOURCES
+} from "./sources.js";
 
-const source = params.get("source") || "mangadex";
+/* =========================
+   CONFIG
+========================= */
 
-const reader = document.getElementById("reader");
+const API_BASE =
+  "https://kairodex.vercel.app";
 
-async function loadChapter() {
+/* =========================
+   PARAMS
+========================= */
+
+const params =
+  new URLSearchParams(window.location.search);
+
+const chapterId =
+  params.get("id");
+
+const source =
+  normalizeSource(
+    params.get("source")
+  );
+
+const mangaId =
+  params.get("manga");
+
+/* =========================
+   ELEMENTOS
+========================= */
+
+const reader =
+  document.getElementById("reader");
+
+const prevBtn =
+  document.getElementById("prev-chapter");
+
+const nextBtn =
+  document.getElementById("next-chapter");
+
+/* =========================
+   STATE
+========================= */
+
+const progressKey =
+  `progress-${source}-${mangaId}-${chapterId}`;
+
+let currentPageIndex =
+  0;
+
+let restoreDone =
+  false;
+
+let scrollTimeout;
+
+/* =========================
+   STORAGE
+========================= */
+
+function getSavedProgress() {
   try {
-    reader.innerHTML = "<p>Carregando capítulo...</p>";
-
-    localStorage.setItem(
-      "lastChapter",
-      JSON.stringify({
-        chapterId,
-        mangaId: params.get("manga"),
-        source,
-        updatedAt: Date.now()
-      })
+    return JSON.parse(
+      localStorage.getItem(progressKey)
     );
+  } catch {
+    return null;
+  }
+}
 
-    if (source === "firebase") {
-      const chapterRef = doc(db, "manualChapters", chapterId);
+function saveProgress() {
+  if (!chapterId || !mangaId) return;
 
-      const chapterSnap = await getDoc(chapterRef);
+  const progress =
+    getScrollProgress();
 
-      if (!chapterSnap.exists()) {
-        reader.innerHTML = "<p>Capítulo não encontrado.</p>";
-        return;
-      }
+  const data = {
+    chapterId,
+    mangaId,
+    source,
+    progress,
+    scrollY: window.scrollY,
+    pageIndex: currentPageIndex,
+    updatedAt: Date.now()
+  };
 
-      const chapter = chapterSnap.data();
+  localStorage.setItem(
+    progressKey,
+    JSON.stringify(data)
+  );
 
-      if (!chapter.pages || chapter.pages.length === 0) {
-        reader.innerHTML = "<p>Capítulo sem páginas.</p>";
-        return;
-      }
+  localStorage.setItem(
+    "lastChapter",
+    JSON.stringify(data)
+  );
+}
 
-      reader.innerHTML = "";
+/* =========================
+   HELPERS
+========================= */
 
-      chapter.pages.forEach((page, index) => {
-        reader.innerHTML += `
-          <img
-            src="${page}"
-            class="reader-image"
-            alt="Página ${index + 1}"
-            loading="lazy"
-          >
-        `;
+function getScrollProgress() {
+  const pageHeight =
+    document.documentElement.scrollHeight - window.innerHeight;
+
+  if (pageHeight <= 0) return 0;
+
+  return Math.min(
+    100,
+    Math.round((window.scrollY / pageHeight) * 100)
+  );
+}
+
+function showReaderMessage(message) {
+  if (!reader) return;
+
+  reader.innerHTML = `
+    <div class="empty-message">
+      <h3>${message}</h3>
+    </div>
+  `;
+}
+
+function renderPages(pages) {
+  if (!reader) return;
+
+  reader.innerHTML = "";
+
+  pages.forEach((pageUrl, index) => {
+    reader.innerHTML += `
+      <img
+        src="${pageUrl}"
+        class="reader-image"
+        data-page-index="${index}"
+        alt="Página ${index + 1}"
+      >
+    `;
+  });
+}
+
+/* =========================
+   RESTORE
+========================= */
+
+function restoreReadingPosition() {
+  const saved =
+    getSavedProgress();
+
+  if (!saved || restoreDone) return;
+
+  const pageIndex =
+    saved.pageIndex || 0;
+
+  setTimeout(() => {
+    if (restoreDone) return;
+
+    const target =
+      document.querySelector(`[data-page-index="${pageIndex}"]`);
+
+    if (target) {
+      target.scrollIntoView({
+        behavior: "auto",
+        block: "start"
       });
 
-      return;
+      restoreDone = true;
     }
+  }, 1200);
+}
 
-    if (source === "manual") {
-      const response = await fetch(
-        `${API_BASE}/api/manual-reader?id=${chapterId}`
-      );
+async function waitImagesThenRestore() {
+  const images =
+    document.querySelectorAll(".reader-image");
 
-      const data = await response.json();
+  if (!images.length) {
+    restoreReadingPosition();
+    return;
+  }
 
-      if (!data.pages || data.pages.length === 0) {
-        reader.innerHTML = "<p>Capítulo manual sem páginas.</p>";
-        return;
-      }
+  let loaded =
+    0;
 
-      reader.innerHTML = "";
+  images.forEach((img) => {
+    if (img.complete) {
+      loaded++;
+    } else {
+      img.addEventListener("load", () => {
+        loaded++;
 
-      data.pages.forEach((page, index) => {
-        reader.innerHTML += `
-          <img
-            src="${page}"
-            class="reader-image"
-            alt="Página ${index + 1}"
-            loading="lazy"
-          >
-        `;
+        if (loaded >= Math.min(images.length, 3)) {
+          restoreReadingPosition();
+        }
       });
-
-      return;
     }
+  });
 
-    const response = await fetch(
-      `${API_BASE}/api/chapter?id=${chapterId}`
+  setTimeout(() => {
+    restoreReadingPosition();
+  }, 2500);
+}
+
+/* =========================
+   TRACKING
+========================= */
+
+function startPageObserver() {
+  const images =
+    document.querySelectorAll(".reader-image");
+
+  const observer =
+    new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            currentPageIndex =
+              Number(entry.target.dataset.pageIndex) || 0;
+
+            saveProgress();
+          }
+        });
+      },
+      {
+        threshold: 0.45
+      }
     );
 
-    const data = await response.json();
+  images.forEach((img) => {
+    observer.observe(img);
+  });
+}
 
-    if (
-      !data.baseUrl ||
-      !data.chapter ||
-      !data.chapter.hash ||
-      !data.chapter.data ||
-      data.chapter.data.length === 0
-    ) {
-      reader.innerHTML = "<p>Este capítulo não possui páginas disponíveis.</p>";
-      return;
-    }
+function startScrollTracking() {
+  window.addEventListener("scroll", () => {
+    clearTimeout(scrollTimeout);
 
-    const baseUrl = data.baseUrl;
-    const hash = data.chapter.hash;
-    const pages = data.chapter.data;
+    scrollTimeout = setTimeout(() => {
+      saveProgress();
+    }, 400);
+  });
+}
 
-    reader.innerHTML = "";
+/* =========================
+   LOADERS
+========================= */
 
-    pages.forEach((page, index) => {
-      const imageUrl = `${baseUrl}/data/${hash}/${page}`;
+async function loadFirebaseChapter() {
+  const chapterRef =
+    doc(db, "manualChapters", chapterId);
 
-      reader.innerHTML += `
-        <img
-          src="${imageUrl}"
-          class="reader-image"
-          alt="Página ${index + 1}"
-          loading="lazy"
-        >
-      `;
+  const chapterSnap =
+    await getDoc(chapterRef);
+
+  if (!chapterSnap.exists()) {
+    showReaderMessage("Capítulo não encontrado.");
+    return false;
+  }
+
+  const chapter =
+    chapterSnap.data();
+
+  if (!chapter.pages || !chapter.pages.length) {
+    showReaderMessage("Capítulo sem páginas.");
+    return false;
+  }
+
+  renderPages(chapter.pages);
+
+  return true;
+}
+
+async function loadMangaDexChapter() {
+  const response =
+    await fetch(`${API_BASE}/api/chapter?id=${chapterId}`);
+
+  const data =
+    await response.json();
+
+  if (
+    !data.baseUrl ||
+    !data.chapter ||
+    !data.chapter.hash ||
+    !data.chapter.data ||
+    !data.chapter.data.length
+  ) {
+    showReaderMessage("Este capítulo não possui páginas disponíveis.");
+    return false;
+  }
+
+  const baseUrl =
+    data.baseUrl;
+
+  const hash =
+    data.chapter.hash;
+
+  const pages =
+    data.chapter.data.map((page) => {
+      return `${baseUrl}/data/${hash}/${page}`;
     });
 
-  } catch (error) {
-    console.log(error);
-    reader.innerHTML = "<p>Erro ao carregar capítulo.</p>";
+  renderPages(pages);
+
+  return true;
+}
+
+/* =========================
+   NAVIGATION
+========================= */
+
+function setupChapterNavigation() {
+  const storedChapters =
+    JSON.parse(localStorage.getItem(`chapters-${mangaId}`)) || [];
+
+  const currentIndex =
+    storedChapters.findIndex((chapter) => {
+      return chapter.id === chapterId && chapter.source === source;
+    });
+
+  if (!prevBtn || !nextBtn) return;
+
+  if (currentIndex <= 0) {
+    prevBtn.disabled = true;
+  } else {
+    const prev =
+      storedChapters[currentIndex - 1];
+
+    prevBtn.addEventListener("click", () => {
+      window.location.href =
+        `/pages/chapter.html?id=${prev.id}&source=${prev.source}&manga=${mangaId}`;
+    });
   }
+
+  if (
+    currentIndex === -1 ||
+    currentIndex >= storedChapters.length - 1
+  ) {
+    nextBtn.disabled = true;
+  } else {
+    const next =
+      storedChapters[currentIndex + 1];
+
+    nextBtn.addEventListener("click", () => {
+      window.location.href =
+        `/pages/chapter.html?id=${next.id}&source=${next.source}&manga=${mangaId}`;
+    });
+  }
+}
+
+/* =========================
+   INIT
+========================= */
+
+async function loadChapter() {
+  if (!reader || !chapterId || !mangaId) {
+    showReaderMessage("Dados do capítulo inválidos.");
+    return;
+  }
+
+  if (!canReadSource(source)) {
+
+  showReaderMessage(
+    "Fonte não suportada."
+  );
+
+  return;
+}
+
+  try {
+    showReaderMessage("Carregando capítulo...");
+
+    const saved =
+      getSavedProgress();
+
+    if (saved) {
+      localStorage.setItem(
+        "lastChapter",
+        JSON.stringify(saved)
+      );
+    }
+
+let loaded = false;
+
+if (source === SOURCES.FIREBASE) {
+  loaded = await loadFirebaseChapter();
+}
+
+if (source === SOURCES.MANGADEX) {
+  loaded = await loadMangaDexChapter();
+}
+
+if (source === SOURCES.COMICK) {
+  showReaderMessage("Fonte Comick ainda não implementada.");
+}
+
+    if (!loaded) return;
+
+    await waitImagesThenRestore();
+
+    startPageObserver();
+
+    startScrollTracking();
+
+  } catch (error) {
+    console.log("Erro chapter:", error);
+
+    showReaderMessage("Erro ao carregar capítulo.");
+  }
+}
+
+setupChapterNavigation();
+
+const readerBackBtn =
+  document.getElementById("reader-back-btn");
+
+if (readerBackBtn && mangaId) {
+  readerBackBtn.href =
+    `/pages/manga.html?id=${mangaId}`;
 }
 
 loadChapter();
