@@ -6,9 +6,11 @@ import {
   signOut
 } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-const auth = getAuth(app);
+const auth =
+  getAuth(app);
 
-/* ELEMENTOS */
+const PLACEHOLDER_COVER =
+  "https://placehold.co/300x450?text=Sem+Capa";
 
 const userName =
   document.getElementById("user-name");
@@ -28,6 +30,9 @@ const recentHistoryDiv =
 const favoritesHomeGrid =
   document.getElementById("favorites-home-grid");
 
+const libraryHomeGrid =
+  document.getElementById("library-home-grid");
+
 const menuToggle =
   document.getElementById("menu-toggle");
 
@@ -43,127 +48,187 @@ const heroText =
 const heroPrimaryBtn =
   document.querySelector(".hero-btn.primary");
 
-/* STORAGE */
+function safeParse(value, fallback) {
+  try {
+    return JSON.parse(value) || fallback;
+  } catch {
+    return fallback;
+  }
+}
 
 const lastChapter =
-  JSON.parse(localStorage.getItem("lastChapter"));
+  safeParse(localStorage.getItem("lastChapter"), null);
 
-/* LOGIN */
+function getMangaCache() {
+  return safeParse(localStorage.getItem("mangaCache"), {});
+}
+
+function getMangaMeta(item = {}) {
+  const mangaId =
+    item.mangaId || item.id;
+
+  const cache =
+    getMangaCache();
+
+  const favorites =
+    safeParse(localStorage.getItem("favorites"), []);
+
+  const library =
+    safeParse(localStorage.getItem("library"), []);
+
+  return (
+    item ||
+    cache[mangaId] ||
+    favorites.find((manga) => manga.mangaId === mangaId || manga.id === mangaId) ||
+    library.find((manga) => manga.mangaId === mangaId || manga.id === mangaId) ||
+    {}
+  );
+}
+
+function getCover(item = {}) {
+  const mangaId =
+    item.mangaId || item.id;
+
+  const cache =
+    getMangaCache();
+
+  const cached =
+    cache[mangaId];
+
+  return (
+    item.cover ||
+    item.coverUrl ||
+    cached?.cover ||
+    PLACEHOLDER_COVER
+  );
+}
+
+function getTitle(item = {}) {
+  const mangaId =
+    item.mangaId || item.id;
+
+  const cache =
+    getMangaCache();
+
+  const cached =
+    cache[mangaId];
+
+  return (
+    item.title ||
+    cached?.title ||
+    "Mangá"
+  );
+}
+
+function normalizeProgress(progress) {
+  const value =
+    Number(progress || 0);
+
+  if (Number.isNaN(value)) return 0;
+
+  return Math.max(
+    0,
+    Math.min(100, value)
+  );
+}
 
 onAuthStateChanged(auth, (user) => {
-
   if (user) {
+    if (userName) {
+      userName.innerText =
+        user.displayName || "Usuário";
+    }
 
-    userName.innerText =
-      user.displayName || "Usuário";
-
-    userPhoto.src =
-      user.photoURL || "/assets/default-user.png";
+    if (userPhoto) {
+      userPhoto.src =
+        user.photoURL || "/assets/default-user.png";
+    }
 
   } else {
-
     window.location.href =
       "/pages/login.html";
-
   }
-
 });
 
-/* LOGOUT */
-
 if (logoutBtn) {
-
   logoutBtn.addEventListener("click", async () => {
-
     await signOut(auth);
 
     window.location.href =
       "/pages/login.html";
-
   });
-
 }
-
-/* MENU MOBILE */
 
 if (menuToggle && navLinks) {
-
   menuToggle.addEventListener("click", () => {
-
     navLinks.classList.toggle("active");
-
   });
-
 }
 
-/* CONTINUAR LENDO */
-
 function renderContinueReading() {
-
   if (!continueReadingDiv) return;
 
   if (!lastChapter || !lastChapter.chapterId) {
-
     continueReadingDiv.innerHTML = `
-
       <div class="empty-message">
-
         <h3>Nenhuma leitura recente</h3>
-
-        <p>
-          Comece a ler um mangá para aparecer aqui.
-        </p>
-
+        <p>Comece a ler um mangá para aparecer aqui.</p>
       </div>
-
     `;
 
     return;
   }
 
+  const meta =
+    getMangaMeta(lastChapter);
+
   const progress =
-    lastChapter.progress || 0;
+    normalizeProgress(lastChapter.progress);
+
+  const cover =
+    getCover({
+      ...meta,
+      ...lastChapter
+    });
+
+  const title =
+    getTitle({
+      ...meta,
+      ...lastChapter
+    });
 
   continueReadingDiv.innerHTML = `
-
     <a
       href="/pages/chapter.html?id=${lastChapter.chapterId}&source=${lastChapter.source || "mangadex"}&manga=${lastChapter.mangaId}"
-      class="continue-card"
+      class="continue-card continue-card-cover"
     >
+      <img
+        src="${cover}"
+        alt="${title}"
+        class="continue-cover"
+        onerror="this.src='${PLACEHOLDER_COVER}'"
+      >
 
-      <div class="continue-top">
+      <div class="continue-info">
+        <div class="continue-top">
+          <h3>${title}</h3>
+          <span>${progress}%</span>
+        </div>
 
-        <h3>Continuar leitura</h3>
+        <p>Clique para voltar ao último capítulo lido.</p>
 
-        <span>
-          ${progress}%
-        </span>
-
+        <div class="progress-bar">
+          <div
+            class="progress-fill"
+            style="width:${progress}%"
+          ></div>
+        </div>
       </div>
-
-      <p>
-        Clique para voltar ao último capítulo lido.
-      </p>
-
-      <div class="progress-bar">
-
-        <div
-          class="progress-fill"
-          style="width:${progress}%"
-        ></div>
-
-      </div>
-
     </a>
-
   `;
-
 }
 
-/* HERO */
-
 function renderHero() {
-
   if (
     !lastChapter ||
     !heroTitle ||
@@ -182,17 +247,13 @@ function renderHero() {
 
   heroPrimaryBtn.href =
     `/pages/chapter.html?id=${lastChapter.chapterId}&source=${lastChapter.source || "mangadex"}&manga=${lastChapter.mangaId}`;
-
 }
 
-/* HISTÓRICO */
-
 function addToRecentHistory() {
-
   if (!lastChapter) return;
 
   const recent =
-    JSON.parse(localStorage.getItem("recentHistory")) || [];
+    safeParse(localStorage.getItem("recentHistory"), []);
 
   const existsIndex =
     recent.findIndex((item) => {
@@ -209,30 +270,20 @@ function addToRecentHistory() {
     "recentHistory",
     JSON.stringify(recent.slice(0, 12))
   );
-
 }
 
 function renderRecentHistory() {
-
   if (!recentHistoryDiv) return;
 
   const recent =
-    JSON.parse(localStorage.getItem("recentHistory")) || [];
+    safeParse(localStorage.getItem("recentHistory"), []);
 
   if (!recent.length) {
-
     recentHistoryDiv.innerHTML = `
-
       <div class="empty-message">
-
         <h3>Nenhum histórico</h3>
-
-        <p>
-          Seus últimos capítulos aparecerão aqui.
-        </p>
-
+        <p>Seus últimos capítulos aparecerão aqui.</p>
       </div>
-
     `;
 
     return;
@@ -241,73 +292,67 @@ function renderRecentHistory() {
   recentHistoryDiv.innerHTML = "";
 
   recent.forEach((item) => {
+    const meta =
+      getMangaMeta(item);
 
     const progress =
-      item.progress || 0;
+      normalizeProgress(item.progress);
+
+    const cover =
+      getCover({
+        ...meta,
+        ...item
+      });
+
+    const title =
+      getTitle({
+        ...meta,
+        ...item
+      });
 
     recentHistoryDiv.innerHTML += `
-
       <a
         href="/pages/chapter.html?id=${item.chapterId}&source=${item.source || "mangadex"}&manga=${item.mangaId}"
         class="recent-card"
       >
+        <img
+          src="${cover}"
+          alt="${title}"
+          class="recent-cover"
+          onerror="this.src='${PLACEHOLDER_COVER}'"
+        >
 
         <div class="recent-top">
-
-          <span class="recent-badge">
-            ${progress}%
-          </span>
-
+          <span class="recent-badge">${progress}%</span>
         </div>
 
-        <h3>
-          Mangá recente
-        </h3>
+        <h3>${title}</h3>
 
-        <p>
-          Continue sua leitura
-        </p>
+        <p>Continue sua leitura</p>
 
         <div class="progress-bar">
-
           <div
             class="progress-fill"
             style="width:${progress}%"
           ></div>
-
         </div>
-
       </a>
-
     `;
-
   });
-
 }
 
-/* FAVORITOS */
-
 function renderFavoritesHome() {
-
   if (!favoritesHomeGrid) return;
 
   const favorites =
-    JSON.parse(localStorage.getItem("favorites")) || [];
+    safeParse(localStorage.getItem("favorites"), []);
 
   if (!favorites.length) {
-
     favoritesHomeGrid.innerHTML = `
-
       <div class="empty-message">
-
         <h3>Nenhum favorito</h3>
-
-        <p>
-          Seus mangás favoritos aparecerão aqui.
-        </p>
-
+        <p>Seus mangás favoritos aparecerão aqui.</p>
       </div>
-
     `;
 
     return;
@@ -316,57 +361,43 @@ function renderFavoritesHome() {
   favoritesHomeGrid.innerHTML = "";
 
   favorites.slice(0, 6).forEach((manga) => {
+    const cover =
+      getCover(manga);
+
+    const title =
+      getTitle(manga);
 
     favoritesHomeGrid.innerHTML += `
-
       <a
-        href="/pages/manga.html?id=${manga.id}"
+        href="/pages/manga.html?id=${manga.mangaId || manga.id}"
         class="favorite-home-card"
       >
-
         <img
-          src="${manga.cover}"
-          alt="${manga.title}"
+          src="${cover}"
+          alt="${title}"
+          onerror="this.src='${PLACEHOLDER_COVER}'"
         >
 
         <div class="favorite-home-overlay">
-
-          <h3>${manga.title}</h3>
-
-          <span>
-            Favorito no KairoDEX
-          </span>
-
+          <h3>${title}</h3>
+          <span>Favorito no KairoDEX</span>
         </div>
-
       </a>
-
     `;
-
   });
-
 }
 
-/* BIBLIOTECA HOME */
-
-const libraryHomeGrid =
-  document.getElementById("library-home-grid");
-
 function renderLibraryHome() {
-
   if (!libraryHomeGrid) return;
 
   const library =
-    JSON.parse(localStorage.getItem("library")) || [];
+    safeParse(localStorage.getItem("library"), []);
 
   if (!library.length) {
-
     libraryHomeGrid.innerHTML = `
       <div class="empty-message">
         <h3>Biblioteca vazia</h3>
-        <p>
-          Mangás marcados como lendo, concluído ou planejado aparecerão aqui.
-        </p>
+        <p>Mangás marcados como lendo, concluído ou planejado aparecerão aqui.</p>
       </div>
     `;
 
@@ -376,38 +407,31 @@ function renderLibraryHome() {
   libraryHomeGrid.innerHTML = "";
 
   library.slice(0, 6).forEach((manga) => {
+    const cover =
+      getCover(manga);
+
+    const title =
+      getTitle(manga);
 
     libraryHomeGrid.innerHTML += `
-
       <a
         href="/pages/manga.html?id=${manga.mangaId || manga.id}"
         class="favorite-home-card"
       >
-
         <img
-          src="${manga.cover}"
-          alt="${manga.title}"
+          src="${cover}"
+          alt="${title}"
+          onerror="this.src='${PLACEHOLDER_COVER}'"
         >
 
         <div class="favorite-home-overlay">
-
-          <h3>${manga.title}</h3>
-
-          <span>
-            ${manga.statusLabel || "Na biblioteca"}
-          </span>
-
+          <h3>${title}</h3>
+          <span>${manga.statusLabel || "Na biblioteca"}</span>
         </div>
-
       </a>
-
     `;
-
   });
-
 }
-
-/* INIT */
 
 renderContinueReading();
 

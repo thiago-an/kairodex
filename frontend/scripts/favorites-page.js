@@ -10,25 +10,26 @@ import {
   getDocs
 } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-/* =========================
-   FIREBASE
-========================= */
-
 const auth =
   getAuth(app);
 
-/* =========================
-   ELEMENTOS
-========================= */
+const PLACEHOLDER_COVER =
+  "https://placehold.co/300x450?text=Sem+Capa";
 
 const favoritesGrid =
   document.getElementById("favorites-grid");
 
-/* =========================
-   HELPERS
-========================= */
+function safeParse(value, fallback) {
+  try {
+    return JSON.parse(value) || fallback;
+  } catch {
+    return fallback;
+  }
+}
 
 function showMessage(title, text) {
+  if (!favoritesGrid) return;
+
   favoritesGrid.innerHTML = `
     <div class="empty-message">
       <h3>${title}</h3>
@@ -37,40 +38,50 @@ function showMessage(title, text) {
   `;
 }
 
-function createFavoriteCard(manga) {
+function normalizeFavorite(manga) {
+  return {
+    id: manga.id || manga.mangaId,
+    mangaId: manga.mangaId || manga.id,
+    title: manga.title || "Sem título",
+    cover: manga.cover || PLACEHOLDER_COVER
+  };
+}
+
+function syncLocalFavorites(favorites) {
+  localStorage.setItem(
+    "favorites",
+    JSON.stringify(favorites)
+  );
+}
+
+function createFavoriteCard(rawManga) {
+  const manga =
+    normalizeFavorite(rawManga);
+
   return `
     <a
       href="/pages/manga.html?id=${manga.mangaId}"
       class="manga-card"
     >
-
       <div class="manga-cover-wrap">
-
         <img
           src="${manga.cover}"
           alt="${manga.title}"
           loading="lazy"
+          onerror="this.src='${PLACEHOLDER_COVER}'"
         >
-
       </div>
 
       <div class="manga-card-info">
         <h3>${manga.title}</h3>
         <p>Favoritado</p>
       </div>
-
     </a>
   `;
 }
 
-/* =========================
-   LOAD FAVORITES
-========================= */
-
 async function loadFavorites(user) {
-
   try {
-
     const snapshot =
       await getDocs(
         collection(
@@ -84,6 +95,15 @@ async function loadFavorites(user) {
     favoritesGrid.innerHTML = "";
 
     if (snapshot.empty) {
+      const localFavorites =
+        safeParse(localStorage.getItem("favorites"), []);
+
+      if (localFavorites.length) {
+        favoritesGrid.innerHTML =
+          localFavorites.map(createFavoriteCard).join("");
+
+        return;
+      }
 
       showMessage(
         "Nenhum favorito",
@@ -93,44 +113,47 @@ async function loadFavorites(user) {
       return;
     }
 
+    const favorites =
+      [];
+
     snapshot.forEach((doc) => {
-
-      const manga =
-        doc.data();
-
-      favoritesGrid.innerHTML +=
-        createFavoriteCard(manga);
-
+      favorites.push(
+        normalizeFavorite(doc.data())
+      );
     });
 
-  } catch (error) {
+    syncLocalFavorites(favorites);
 
+    favoritesGrid.innerHTML =
+      favorites.map(createFavoriteCard).join("");
+
+  } catch (error) {
     console.log(error);
+
+    const localFavorites =
+      safeParse(localStorage.getItem("favorites"), []);
+
+    if (localFavorites.length) {
+      favoritesGrid.innerHTML =
+        localFavorites.map(createFavoriteCard).join("");
+
+      return;
+    }
 
     showMessage(
       "Erro",
       "Não foi possível carregar seus favoritos."
     );
-
   }
-
 }
 
-/* =========================
-   INIT
-========================= */
-
 onAuthStateChanged(auth, async (user) => {
-
   if (!user) {
-
     window.location.href =
       "/pages/login.html";
 
     return;
-
   }
 
   await loadFavorites(user);
-
 });

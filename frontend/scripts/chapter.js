@@ -5,7 +5,6 @@ import {
   getDoc
 } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-
 import {
   normalizeSource,
   canReadSource
@@ -15,16 +14,11 @@ import {
   SOURCES
 } from "./sources.js";
 
-/* =========================
-   CONFIG
-========================= */
-
 const API_BASE =
   "https://kairodex.vercel.app";
 
-/* =========================
-   PARAMS
-========================= */
+const PLACEHOLDER_COVER =
+  "https://placehold.co/300x450?text=Sem+Capa";
 
 const params =
   new URLSearchParams(window.location.search);
@@ -40,10 +34,6 @@ const source =
 const mangaId =
   params.get("manga");
 
-/* =========================
-   ELEMENTOS
-========================= */
-
 const reader =
   document.getElementById("reader");
 
@@ -52,10 +42,6 @@ const prevBtn =
 
 const nextBtn =
   document.getElementById("next-chapter");
-
-/* =========================
-   STATE
-========================= */
 
 const progressKey =
   `progress-${source}-${mangaId}-${chapterId}`;
@@ -68,22 +54,65 @@ let restoreDone =
 
 let scrollTimeout;
 
-/* =========================
-   STORAGE
-========================= */
+function safeParse(value, fallback) {
+  try {
+    return JSON.parse(value) || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function getMangaMeta() {
+  const mangaCache =
+    safeParse(localStorage.getItem("mangaCache"), {});
+
+  const currentManga =
+    safeParse(localStorage.getItem("currentManga"), null);
+
+  const favorites =
+    safeParse(localStorage.getItem("favorites"), []);
+
+  const library =
+    safeParse(localStorage.getItem("library"), []);
+
+  return (
+    mangaCache[mangaId] ||
+    (
+      currentManga &&
+      (currentManga.mangaId === mangaId || currentManga.id === mangaId)
+        ? currentManga
+        : null
+    ) ||
+    favorites.find((item) => item.mangaId === mangaId || item.id === mangaId) ||
+    library.find((item) => item.mangaId === mangaId || item.id === mangaId) ||
+    {}
+  );
+}
 
 function getSavedProgress() {
-  try {
-    return JSON.parse(
-      localStorage.getItem(progressKey)
-    );
-  } catch {
-    return null;
-  }
+  return safeParse(
+    localStorage.getItem(progressKey),
+    null
+  );
+}
+
+function getScrollProgress() {
+  const pageHeight =
+    document.documentElement.scrollHeight - window.innerHeight;
+
+  if (pageHeight <= 0) return 0;
+
+  return Math.min(
+    100,
+    Math.round((window.scrollY / pageHeight) * 100)
+  );
 }
 
 function saveProgress() {
   if (!chapterId || !mangaId) return;
+
+  const mangaMeta =
+    getMangaMeta();
 
   const progress =
     getScrollProgress();
@@ -95,6 +124,8 @@ function saveProgress() {
     progress,
     scrollY: window.scrollY,
     pageIndex: currentPageIndex,
+    title: mangaMeta.title || "Mangá recente",
+    cover: mangaMeta.cover || PLACEHOLDER_COVER,
     updatedAt: Date.now()
   };
 
@@ -106,22 +137,6 @@ function saveProgress() {
   localStorage.setItem(
     "lastChapter",
     JSON.stringify(data)
-  );
-}
-
-/* =========================
-   HELPERS
-========================= */
-
-function getScrollProgress() {
-  const pageHeight =
-    document.documentElement.scrollHeight - window.innerHeight;
-
-  if (pageHeight <= 0) return 0;
-
-  return Math.min(
-    100,
-    Math.round((window.scrollY / pageHeight) * 100)
   );
 }
 
@@ -151,10 +166,6 @@ function renderPages(pages) {
     `;
   });
 }
-
-/* =========================
-   RESTORE
-========================= */
 
 function restoreReadingPosition() {
   const saved =
@@ -213,10 +224,6 @@ async function waitImagesThenRestore() {
   }, 2500);
 }
 
-/* =========================
-   TRACKING
-========================= */
-
 function startPageObserver() {
   const images =
     document.querySelectorAll(".reader-image");
@@ -252,10 +259,6 @@ function startScrollTracking() {
     }, 400);
   });
 }
-
-/* =========================
-   LOADERS
-========================= */
 
 async function loadFirebaseChapter() {
   const chapterRef =
@@ -316,13 +319,9 @@ async function loadMangaDexChapter() {
   return true;
 }
 
-/* =========================
-   NAVIGATION
-========================= */
-
 function setupChapterNavigation() {
   const storedChapters =
-    JSON.parse(localStorage.getItem(`chapters-${mangaId}`)) || [];
+    safeParse(localStorage.getItem(`chapters-${mangaId}`), []);
 
   const currentIndex =
     storedChapters.findIndex((chapter) => {
@@ -359,10 +358,6 @@ function setupChapterNavigation() {
   }
 }
 
-/* =========================
-   INIT
-========================= */
-
 async function loadChapter() {
   if (!reader || !chapterId || !mangaId) {
     showReaderMessage("Dados do capítulo inválidos.");
@@ -370,13 +365,9 @@ async function loadChapter() {
   }
 
   if (!canReadSource(source)) {
-
-  showReaderMessage(
-    "Fonte não suportada."
-  );
-
-  return;
-}
+    showReaderMessage("Fonte não suportada.");
+    return;
+  }
 
   try {
     showReaderMessage("Carregando capítulo...");
@@ -385,25 +376,35 @@ async function loadChapter() {
       getSavedProgress();
 
     if (saved) {
+      const mangaMeta =
+        getMangaMeta();
+
       localStorage.setItem(
         "lastChapter",
-        JSON.stringify(saved)
+        JSON.stringify({
+          ...saved,
+          title: saved.title || mangaMeta.title || "Mangá recente",
+          cover: saved.cover || mangaMeta.cover || PLACEHOLDER_COVER
+        })
       );
     }
 
-let loaded = false;
+    let loaded =
+      false;
 
-if (source === SOURCES.FIREBASE) {
-  loaded = await loadFirebaseChapter();
-}
+    if (source === SOURCES.FIREBASE) {
+      loaded =
+        await loadFirebaseChapter();
+    }
 
-if (source === SOURCES.MANGADEX) {
-  loaded = await loadMangaDexChapter();
-}
+    if (source === SOURCES.MANGADEX) {
+      loaded =
+        await loadMangaDexChapter();
+    }
 
-if (source === SOURCES.COMICK) {
-  showReaderMessage("Fonte Comick ainda não implementada.");
-}
+    if (source === SOURCES.COMICK) {
+      showReaderMessage("Fonte Comick ainda não implementada.");
+    }
 
     if (!loaded) return;
 

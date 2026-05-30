@@ -10,16 +10,11 @@ import {
   setDoc
 } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-/* =========================
-   FIREBASE
-========================= */
-
 const auth =
   getAuth(app);
 
-/* =========================
-   PARAMS / ELEMENTOS
-========================= */
+const PLACEHOLDER_COVER =
+  "https://placehold.co/300x450?text=Sem+Capa";
 
 const params =
   new URLSearchParams(window.location.search);
@@ -30,14 +25,19 @@ const mangaId =
 const favoriteBtn =
   document.getElementById("favorite-btn");
 
-/* =========================
-   STORAGE
-========================= */
+function safeParse(value, fallback) {
+  try {
+    return JSON.parse(value) || fallback;
+  } catch {
+    return fallback;
+  }
+}
 
 function getLocalFavorites() {
-  return JSON.parse(
-    localStorage.getItem("favorites")
-  ) || [];
+  return safeParse(
+    localStorage.getItem("favorites"),
+    []
+  );
 }
 
 function setLocalFavorites(favorites) {
@@ -48,18 +48,30 @@ function setLocalFavorites(favorites) {
 }
 
 function getCurrentManga() {
-  return JSON.parse(
-    localStorage.getItem("currentManga")
+  return safeParse(
+    localStorage.getItem("currentManga"),
+    null
   );
 }
 
-function isFavorite(mangaId) {
+function isFavorite(id) {
   const favorites =
     getLocalFavorites();
 
   return favorites.some((item) => {
-    return item.id === mangaId || item.mangaId === mangaId;
+    return item.id === id || item.mangaId === id;
   });
+}
+
+function normalizeManga(manga) {
+  return {
+    id: mangaId,
+    mangaId,
+    title: manga?.title || "Sem título",
+    cover: manga?.cover || PLACEHOLDER_COVER,
+    description: manga?.description || "",
+    createdAt: Date.now()
+  };
 }
 
 function saveFavoriteLocal(manga) {
@@ -73,14 +85,21 @@ function saveFavoriteLocal(manga) {
 
   if (!exists) {
     favorites.unshift(manga);
+  } else {
+    const index =
+      favorites.findIndex((item) => {
+        return item.id === manga.id || item.mangaId === manga.mangaId;
+      });
 
-    setLocalFavorites(favorites);
+    favorites[index] =
+      {
+        ...favorites[index],
+        ...manga
+      };
   }
-}
 
-/* =========================
-   UI
-========================= */
+  setLocalFavorites(favorites);
+}
 
 function markAsFavorite() {
   if (!favoriteBtn) return;
@@ -92,20 +111,12 @@ function markAsFavorite() {
     true;
 }
 
-/* =========================
-   FIRESTORE
-========================= */
-
 async function saveFavoriteFirestore(user, manga) {
   await setDoc(
     doc(db, "users", user.uid, "favorites", mangaId),
     manga
   );
 }
-
-/* =========================
-   INIT
-========================= */
 
 onAuthStateChanged(auth, (user) => {
   if (!user || !favoriteBtn || !mangaId) return;
@@ -123,12 +134,8 @@ onAuthStateChanged(auth, (user) => {
       return;
     }
 
-    const favoriteData = {
-      ...currentManga,
-      id: mangaId,
-      mangaId,
-      createdAt: Date.now()
-    };
+    const favoriteData =
+      normalizeManga(currentManga);
 
     try {
       await saveFavoriteFirestore(user, favoriteData);

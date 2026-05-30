@@ -1,39 +1,23 @@
-/* =========================
-   CONFIG
-========================= */
+const API_BASE = "https://kairodex.vercel.app";
 
-const API_BASE =
-  "https://kairodex.vercel.app";
+const params = new URLSearchParams(window.location.search);
+const mangaId = params.get("id");
 
-/* =========================
-   PARAMS
-========================= */
+const titleEl = document.getElementById("manga-title");
+const coverEl = document.getElementById("manga-cover");
+const descriptionEl = document.getElementById("manga-description");
+const genresDiv = document.getElementById("manga-genres");
 
-const params =
-  new URLSearchParams(window.location.search);
+const PLACEHOLDER_COVER =
+  "https://placehold.co/300x450?text=Sem+Capa";
 
-const mangaId =
-  params.get("id");
-
-/* =========================
-   ELEMENTOS
-========================= */
-
-const titleEl =
-  document.getElementById("manga-title");
-
-const coverEl =
-  document.getElementById("manga-cover");
-
-const descriptionEl =
-  document.getElementById("manga-description");
-
-const genresDiv =
-  document.getElementById("manga-genres");
-
-/* =========================
-   HELPERS
-========================= */
+function safeParse(value, fallback) {
+  try {
+    return JSON.parse(value) || fallback;
+  } catch {
+    return fallback;
+  }
+}
 
 function getMangaTitle(manga) {
   return (
@@ -55,7 +39,7 @@ function getCoverUrl(manga) {
     manga.relationships?.find((rel) => rel.type === "cover_art");
 
   if (!coverRel?.attributes?.fileName) {
-    return "https://placehold.co/300x450?text=Sem+Capa";
+    return PLACEHOLDER_COVER;
   }
 
   return `${API_BASE}/api/image?mangaId=${mangaId}&fileName=${encodeURIComponent(
@@ -63,16 +47,23 @@ function getCoverUrl(manga) {
   )}`;
 }
 
-function saveCurrentManga(mangaData) {
+function saveMangaCache(mangaData) {
+  const cache =
+    safeParse(localStorage.getItem("mangaCache"), {});
+
+  cache[mangaData.mangaId] =
+    mangaData;
+
+  localStorage.setItem(
+    "mangaCache",
+    JSON.stringify(cache)
+  );
+
   localStorage.setItem(
     "currentManga",
     JSON.stringify(mangaData)
   );
 }
-
-/* =========================
-   UI
-========================= */
 
 function showError() {
   if (titleEl) {
@@ -96,7 +87,7 @@ function renderGenres(manga) {
 
   tags.slice(0, 12).forEach((tag) => {
     const genre =
-      tag.attributes?.name?.pt_br ||
+      tag.attributes?.name?.["pt-br"] ||
       tag.attributes?.name?.en ||
       "Gênero";
 
@@ -131,11 +122,16 @@ function renderManga(manga) {
   if (coverEl) {
     coverEl.src =
       coverUrl;
+
+    coverEl.onerror = () => {
+      coverEl.src =
+        PLACEHOLDER_COVER;
+    };
   }
 
   renderGenres(manga);
 
-  saveCurrentManga({
+  saveMangaCache({
     id: mangaId,
     mangaId,
     title: mangaTitle,
@@ -143,10 +139,6 @@ function renderManga(manga) {
     description
   });
 }
-
-/* =========================
-   API
-========================= */
 
 async function fetchManga() {
   const response =
@@ -161,10 +153,6 @@ async function fetchManga() {
 
   return data.data;
 }
-
-/* =========================
-   INIT
-========================= */
 
 async function loadManga() {
   if (!mangaId) {
