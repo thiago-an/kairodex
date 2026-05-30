@@ -386,8 +386,11 @@ main,
 
 .manga-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-  gap: 25px;
+
+  grid-template-columns:
+    repeat(auto-fill, minmax(180px, 1fr));
+
+  gap: 16px;
 }
 
 .catalog-carousel .manga-card {
@@ -396,22 +399,16 @@ main,
 }
 
 .manga-card {
-  position: relative;
+  width: 180px;
+  min-width: 180px;
 
-  background: #141414;
+  padding: 10px;
 
-  border-radius: 20px;
+  border-radius: 18px;
 
-  overflow: hidden;
+  background: #111;
 
-  text-decoration: none;
-  color: white;
-
-  border: 1px solid rgba(255,255,255,0.04);
-
-  transition: 0.35s;
-
-  animation: cardFade 0.5s ease forwards;
+  transition: .25s;
 }
 
 .manga-card:hover {
@@ -472,13 +469,14 @@ main,
 
 .manga-card img {
   width: 100%;
-  height: 285px;
+
+  aspect-ratio: 2 / 3;
 
   object-fit: cover;
 
-  transition:
-    transform 0.45s ease,
-    filter 0.45s ease;
+  border-radius: 12px;
+
+  display: block;
 }
 
 .manga-card:hover img {
@@ -694,20 +692,12 @@ main,
 
 .trending-card,
 .favorite-home-card {
-  position: relative;
+  width: 180px;
+  min-width: 180px;
 
-  height: 340px;
-
-  border-radius: 22px;
+  border-radius: 14px;
 
   overflow: hidden;
-
-  text-decoration: none;
-  color: white;
-
-  transition: 0.35s;
-
-  border: 1px solid rgba(255,255,255,0.05);
 }
 
 .trending-card:hover,
@@ -1360,7 +1350,17 @@ main,
     height: 215px;
   }
 
-  .trending-card,
+  .trending-card {
+  width: 180px;
+  min-width: 180px;
+
+  aspect-ratio: 2 / 3;
+
+  border-radius: 18px;
+
+  overflow: hidden;
+}
+
   .favorite-home-card {
     height: 300px;
   }
@@ -1431,4 +1431,81 @@ main,
 .manga-card img {
   object-fit: contain;
   background: #111;
+}
+
+/* =========================
+   FIX CONTINUAR LENDO
+========================= */
+
+.continue-reading .continue-card {
+  position: relative;
+
+  width: 560px;
+  min-width: 560px;
+  max-width: 100%;
+
+  display: flex;
+  align-items: center;
+  gap: 18px;
+
+  padding: 20px;
+
+  background: linear-gradient(180deg, #1a1a1a, #111);
+
+  border-radius: 22px;
+
+  overflow: hidden;
+}
+
+.continue-reading .continue-card::before,
+.continue-reading .continue-card::after {
+  display: none !important;
+  content: none !important;
+}
+
+.continue-reading .continue-cover {
+  width: 95px;
+  height: 135px;
+
+  object-fit: cover;
+
+  border-radius: 14px;
+
+  flex-shrink: 0;
+}
+
+.continue-reading .continue-info {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  z-index: 2;
+}
+
+.continue-reading .continue-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.continue-reading .continue-top h3 {
+  padding: 0;
+  margin: 0;
+
+  font-size: 22px;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.continue-reading .continue-card p {
+  padding: 0;
+  margin: 10px 0 0;
+
+  color: #aaa;
+}
+
+.continue-reading .progress-bar {
+  margin-top: 16px;
 }
